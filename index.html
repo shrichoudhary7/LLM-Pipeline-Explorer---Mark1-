@@ -1,0 +1,3759 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Pipeline Explorer — Interactive Architecture Guide for CS Students</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f8fc;
+    --bg-elevated: #ffffff;
+    --bg-subtle: #f1f5f9;
+    --bg-code: #0f172a;
+    --text: #0f172a;
+    --text-muted: #475569;
+    --text-soft: #64748b;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-soft: #eef2ff;
+    --accent-border: #c7d2fe;
+    --teal: #0d9488;
+    --teal-soft: #f0fdfa;
+    --amber: #d97706;
+    --amber-soft: #fffbeb;
+    --rose: #e11d48;
+    --rose-soft: #fff1f2;
+    --emerald: #059669;
+    --emerald-soft: #ecfdf5;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 8px 24px -6px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --canvas-bg: #ffffff;
+    --canvas-grid: #e2e8f0;
+    --canvas-axis: #94a3b8;
+    --canvas-text: #1e293b;
+  }
+
+  [data-theme="dark"] {
+    --bg: #0b1120;
+    --bg-elevated: #111827;
+    --bg-subtle: #1e293b;
+    --bg-code: #020617;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-soft: #64748b;
+    --border: #1e293b;
+    --border-strong: #334155;
+    --accent: #818cf8;
+    --accent-hover: #6366f1;
+    --accent-soft: rgba(99, 102, 241, 0.14);
+    --accent-border: rgba(129, 140, 248, 0.32);
+    --teal: #2dd4bf;
+    --teal-soft: rgba(45, 212, 191, 0.12);
+    --amber: #fbbf24;
+    --amber-soft: rgba(251, 191, 36, 0.12);
+    --rose: #fb7185;
+    --rose-soft: rgba(251, 113, 133, 0.12);
+    --emerald: #34d399;
+    --emerald-soft: rgba(52, 211, 153, 0.12);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 12px 30px -8px rgba(0, 0, 0, 0.5);
+    --canvas-bg: #0f172a;
+    --canvas-grid: #1e293b;
+    --canvas-axis: #475569;
+    --canvas-text: #e2e8f0;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ================= STICKY HEADER & PIPELINE NAV ================= */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner {
+    max-width: 1260px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .brand-badge {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #4f46e5, #0d9488);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .pipeline-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 2px 0;
+  }
+  .pipeline-nav::-webkit-scrollbar { display: none; }
+  .nav-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    transition: all 0.16s ease;
+  }
+  .nav-pill:hover {
+    color: var(--text);
+    background: var(--bg-subtle);
+  }
+  .nav-pill.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: var(--accent-border);
+  }
+  .nav-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    opacity: 0.75;
+  }
+  .theme-btn {
+    border: 1px solid var(--border-strong);
+    background: var(--bg-elevated);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .theme-btn:hover { background: var(--bg-subtle); }
+  .progress-track {
+    height: 3px;
+    background: var(--border);
+    width: 100%;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4f46e5, #0d9488, #d97706);
+    transition: width 0.1s linear;
+  }
+
+  /* ================= MAIN CONTAINER & HERO ================= */
+  .container {
+    max-width: 1220px;
+    margin: 0 auto;
+    padding: 28px 20px 90px;
+  }
+
+  .hero {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 32px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 90% 10%, var(--accent-soft), transparent 45%),
+                radial-gradient(circle at 10% 90%, var(--teal-soft), transparent 40%);
+    pointer-events: none;
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    margin: 0 0 10px;
+    font-size: clamp(26px, 3.6vw, 38px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+  .hero p.lead {
+    margin: 0 0 22px;
+    max-width: 780px;
+    color: var(--text-muted);
+    font-size: 15.5px;
+  }
+
+  /* Pipeline Flow Strip */
+  .flow-strip {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .flow-node {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 10px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.16s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .flow-node:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+  .flow-node .fn-step {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .flow-node .fn-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .flow-node .fn-io {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-soft);
+  }
+
+  /* Global Sync Prompt Bar */
+  .global-prompt-bar {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .global-prompt-bar label {
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .global-prompt-input {
+    flex: 1;
+    min-width: 240px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    padding: 9px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--bg-elevated);
+    color: var(--text);
+  }
+  .preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .preset-chip {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.14s;
+  }
+  .preset-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* ================= STAGE CARDS ================= */
+  .stage-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-md);
+    scroll-margin-top: 76px;
+  }
+  .stage-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding-bottom: 18px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stage-title-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .stage-num {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 15px;
+    display: grid;
+    place-items: center;
+  }
+  .stage-header h2 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .stage-sub {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14.5px;
+  }
+  .io-badge {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px 11px;
+    border-radius: 8px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .io-badge strong { color: var(--text); }
+
+  /* Concept & Math Callouts */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .callout {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px 18px;
+    font-size: 14px;
+  }
+  .callout h4 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+  .callout p { margin: 0 0 8px; color: var(--text-muted); }
+  .callout p:last-child { margin-bottom: 0; }
+  .formula-box {
+    background: var(--bg-code);
+    color: #e2e8f0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    overflow-x: auto;
+    line-height: 1.65;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+  }
+  .formula-box .f-label {
+    display: block;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+  .formula-box .hl { color: #818cf8; font-weight: 600; }
+  .formula-box .hl-teal { color: #2dd4bf; font-weight: 600; }
+  .formula-box .hl-amber { color: #fbbf24; font-weight: 600; }
+
+  /* Layout Utilities */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .grid-2-asym { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .panel {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .panel-white {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .panel h3 {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* Form Controls */
+  label.field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 12px 0 6px;
+  }
+  label.field-label:first-child { margin-top: 0; }
+  textarea, input[type="text"], select {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    padding: 9px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--bg-elevated);
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  textarea.mono, input.mono { font-family: var(--font-mono); font-size: 13px; }
+  textarea:focus, input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 15px;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary {
+    background: var(--bg-elevated);
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+  .btn-secondary:hover { background: var(--bg-subtle); border-color: var(--accent); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+
+  /* Segmented Control */
+  .seg-group {
+    display: inline-flex;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .seg-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .seg-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* Metrics & Tables */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .metric-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .metric-card .m-val {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .metric-card .m-lbl {
+    font-size: 11.5px;
+    color: var(--text-soft);
+    font-weight: 500;
+  }
+
+  .table-wrap {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-elevated);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th, td {
+    padding: 7px 11px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--bg-subtle);
+    position: sticky;
+    top: 0;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    z-index: 2;
+  }
+  td.mono { font-family: var(--font-mono); }
+
+  /* Token Chips */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 10px;
+  }
+  .chip {
+    border-radius: 8px;
+    padding: 5px 9px;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+    position: relative;
+  }
+  .chip:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+  .chip.selected {
+    outline: 2.5px solid var(--accent);
+    outline-offset: 1px;
+    transform: translateY(-2px);
+  }
+  .chip .t-txt {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .chip .t-id {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: #334155;
+  }
+  .chip .t-tag {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #9a3412;
+  }
+
+  /* Vector Heatmap Strip */
+  .vec-heatmap {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 5px;
+    margin-top: 10px;
+  }
+  .vec-cell {
+    border-radius: 7px;
+    padding: 7px 4px;
+    text-align: center;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    transition: transform 0.12s;
+  }
+  .vec-cell:hover { transform: scale(1.06); z-index: 2; }
+  .vec-cell .vc-dim {
+    font-size: 9.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.85;
+  }
+  .vec-cell .vc-val {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* Interactive Canvases */
+  .canvas-box {
+    position: relative;
+    background: var(--canvas-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .canvas-box canvas {
+    display: block;
+    width: 100%;
+    cursor: grab;
+  }
+  .canvas-box canvas:active { cursor: grabbing; }
+  .canvas-hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    pointer-events: none;
+  }
+  .hud-pill {
+    background: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 4px 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    pointer-events: auto;
+  }
+  .canvas-tooltip {
+    position: absolute;
+    display: none;
+    pointer-events: none;
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    max-width: 260px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    z-index: 10;
+    line-height: 1.4;
+  }
+
+  /* Similarity Matrix */
+  .sim-matrix {
+    overflow-x: auto;
+    margin-top: 10px;
+  }
+  .sim-matrix table {
+    font-size: 11.5px;
+    font-family: var(--font-mono);
+  }
+  .sim-matrix th, .sim-matrix td {
+    padding: 5px 6px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .sim-matrix td.row-hdr {
+    text-align: left;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    max-width: 145px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: var(--bg-subtle);
+  }
+
+  /* Attention Heatmap & Flow */
+  .attn-grid-wrap {
+    overflow-x: auto;
+  }
+  .attn-table {
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    width: auto;
+    min-width: 100%;
+  }
+  .attn-table th, .attn-table td {
+    border: 1px solid var(--border);
+    padding: 6px 8px;
+    text-align: center;
+    min-width: 54px;
+  }
+  .attn-table tr.active-row th.row-tok {
+    background: var(--accent);
+    color: #fff;
+  }
+  .attn-table th.row-tok {
+    cursor: pointer;
+    text-align: right;
+    background: var(--bg-subtle);
+    transition: background 0.12s;
+  }
+
+  /* Transformer Architecture Flow */
+  .arch-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .arch-node {
+    background: var(--bg-elevated);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.15s;
+  }
+  .arch-node:hover { border-color: var(--accent); }
+  .arch-node.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .arch-node .an-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .arch-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: var(--bg-subtle);
+    color: var(--accent);
+  }
+  .arch-arrow {
+    text-align: center;
+    color: var(--text-soft);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  /* Sampling Bars */
+  .prob-row {
+    display: grid;
+    grid-template-columns: 95px 62px 1fr 68px;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .prob-row.excluded { opacity: 0.36; }
+  .prob-row.winner {
+    background: var(--emerald-soft);
+    border-color: var(--emerald);
+  }
+  .prob-bar-track {
+    height: 20px;
+    background: var(--bg-subtle);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .prob-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.25s ease;
+  }
+
+  .tag-pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+  .tag-indigo { background: var(--accent-soft); color: var(--accent); }
+  .tag-teal { background: var(--teal-soft); color: var(--teal); }
+  .tag-amber { background: var(--amber-soft); color: var(--amber); }
+  .tag-rose { background: var(--rose-soft); color: var(--rose); }
+  .tag-emerald { background: var(--emerald-soft); color: var(--emerald); }
+
+  .hint-note {
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--amber-soft);
+    border-left: 3px solid var(--amber);
+    padding: 9px 12px;
+    border-radius: 0 8px 8px 0;
+    margin-top: 10px;
+  }
+  .hint-info {
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 9px 12px;
+    border-radius: 0 8px 8px 0;
+    margin-top: 10px;
+  }
+
+  details.cs-deep-dive {
+    margin-top: 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-subtle);
+    padding: 10px 14px;
+  }
+  details.cs-deep-dive summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  details.cs-deep-dive summary::before {
+    content: "▸";
+    transition: transform 0.15s;
+  }
+  details.cs-deep-dive[open] summary::before { transform: rotate(90deg); }
+  details.cs-deep-dive .dd-body {
+    margin-top: 10px;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  .footer {
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 13px;
+    padding: 24px 0 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Responsive */
+  @media (max-width: 960px) {
+    .flow-strip { grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); }
+    .concept-grid, .grid-2, .grid-2-asym, .grid-3 { grid-template-columns: 1fr; }
+    .vec-heatmap { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .stage-card { padding: 20px; }
+    .hero { padding: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== STICKY NAVIGATION ==================== -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="#top" class="brand">
+      <span class="brand-badge">LLM</span>
+      <span>Pipeline Explorer</span>
+    </a>
+    <nav class="pipeline-nav" id="pipeline-nav" aria-label="Chronological LLM Pipeline">
+      <a class="nav-pill active" href="#stage-1"><span class="nav-num">01</span>Tokenizer</a>
+      <a class="nav-pill" href="#stage-2"><span class="nav-num">02</span>Embeddings</a>
+      <a class="nav-pill" href="#stage-3"><span class="nav-num">03</span>Vectors &amp; Cosine</a>
+      <a class="nav-pill" href="#stage-4"><span class="nav-num">04</span>Positional Enc.</a>
+      <a class="nav-pill" href="#stage-5"><span class="nav-num">05</span>Self-Attention</a>
+      <a class="nav-pill" href="#stage-6"><span class="nav-num">06</span>Transformer</a>
+      <a class="nav-pill" href="#stage-7"><span class="nav-num">07</span>Sampling</a>
+    </nav>
+    <button class="theme-btn" id="theme-toggle" title="Toggle Dark/Light Theme">
+      <span id="theme-icon">☾</span><span id="theme-label">Dark</span>
+    </button>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="scroll-progress"></div></div>
+</header>
+
+<main class="container" id="top">
+
+  <!-- ==================== HERO & CHRONOLOGICAL MAP ==================== -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-eyebrow">INTERACTIVE CS ARCHITECTURE LAB · END-TO-END TRANSFORMER PIPELINE</div>
+      <h1>How a Large Language Model Actually Works</h1>
+      <p class="lead">
+        Follow a single prompt chronologically from raw UTF-8 text through <strong>Subword Tokenization</strong>,
+        <strong>Dense Embeddings</strong>, <strong>Vector Space Geometry &amp; Cosine Similarity</strong>,
+        <strong>Positional Encoding</strong>, <strong>Self-Attention (Q·K·V)</strong>,
+        <strong>Transformer Blocks</strong>, and <strong>Autoregressive Sampling</strong>.
+        Every widget below runs live math in your browser.
+      </p>
+
+      <div class="flow-strip">
+        <a class="flow-node" href="#stage-1">
+          <span class="fn-step">STAGE 01</span>
+          <span class="fn-title">Tokenizer</span>
+          <span class="fn-io">string → int[]</span>
+        </a>
+        <a class="flow-node" href="#stage-2">
+          <span class="fn-step">STAGE 02</span>
+          <span class="fn-title">Embeddings</span>
+          <span class="fn-io">int[] → ℝ^(L×d)</span>
+        </a>
+        <a class="flow-node" href="#stage-3">
+          <span class="fn-step">STAGE 03</span>
+          <span class="fn-title">Vector Space</span>
+          <span class="fn-io">cos(θ) &amp; 3D PCA</span>
+        </a>
+        <a class="flow-node" href="#stage-4">
+          <span class="fn-step">STAGE 04</span>
+          <span class="fn-title">Position</span>
+          <span class="fn-io">X = E + PE(pos)</span>
+        </a>
+        <a class="flow-node" href="#stage-5">
+          <span class="fn-step">STAGE 05</span>
+          <span class="fn-title">Self-Attention</span>
+          <span class="fn-io">softmax(QKᵀ/√d)V</span>
+        </a>
+        <a class="flow-node" href="#stage-6">
+          <span class="fn-step">STAGE 06</span>
+          <span class="fn-title">Transformer</span>
+          <span class="fn-io">LN → MHA → FFN</span>
+        </a>
+        <a class="flow-node" href="#stage-7">
+          <span class="fn-step">STAGE 07</span>
+          <span class="fn-title">Decoding</span>
+          <span class="fn-io">logits → token</span>
+        </a>
+      </div>
+
+      <div class="global-prompt-bar">
+        <label for="global-prompt">Live Pipeline Prompt</label>
+        <input type="text" id="global-prompt" class="global-prompt-input" value="The dogs liked the sunny zebra." placeholder="Type any sentence to trace across all stages...">
+        <button class="btn btn-primary" id="sync-pipeline-btn">Trace Through Pipeline →</button>
+        <div class="preset-row">
+          <span style="font-size:12px;color:var(--text-soft);align-self:center;margin-right:4px;">Presets:</span>
+          <button class="preset-chip" data-preset="The dogs liked the sunny zebra.">The dogs liked the sunny zebra.</button>
+          <button class="preset-chip" data-preset="The cat sat on the mat.">The cat sat on the mat.</button>
+          <button class="preset-chip" data-preset="The animal didn't cross the street because it was too tired">Pronoun attention example</button>
+          <button class="preset-chip" data-preset="The bank by the river was flooded">Polysemy ("bank")</button>
+          <button class="preset-chip" data-preset="Coding in Python is fast">Coding in Python</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STAGE 1: TOKENIZER ==================== -->
+  <section class="stage-card" id="stage-1">
+    <div class="stage-header">
+      <div class="stage-title-group">
+        <div class="stage-num">01</div>
+        <div>
+          <h2>Tokenizer &amp; Subword Vocabulary</h2>
+          <p class="stage-sub">Converting raw text strings into discrete integer IDs using subword segmentation.</p>
+        </div>
+      </div>
+      <div class="io-badge"><strong>String</strong> → <strong>Token IDs [int]</strong></div>
+    </div>
+
+    <div class="concept-grid">
+      <div class="callout">
+        <h4>Why Subwords? (The CS Tradeoff)</h4>
+        <p>
+          <strong>Character-level</strong> keeps vocabulary tiny (~100) but makes sequences huge—and since Attention costs <code>O(L²)</code>, long sequences explode compute.
+          <strong>Word-level</strong> fails on unseen words (<code>OOV</code>), plurals, and code identifiers.
+        </p>
+        <p>
+          Modern LLMs use <strong>Subword Tokenizers</strong> (<strong>WordPiece</strong> in BERT, <strong>BPE</strong> in GPT-4/Llama): frequent words stay single tokens, while rare words split into known pieces (<code>dogs → dog + ##s</code>).
+        </p>
+      </div>
+      <div class="formula-box">
+        <span class="f-label">Compression &amp; Vocabulary Tradeoff</span>
+        <div><span class="hl">Encode</span>: text ──▶ [t₁, t₂, ..., t_L],  tᵢ ∈ {0, ..., |V|-1}</div>
+        <div><span class="hl-teal">Ratio</span> : chars_per_token = len(text) / L</div>
+        <div><span class="hl-amber">GPT-4</span> : |V| ≈ 100,277 (cl100k_base BPE)</div>
+        <div><span class="hl-amber">Llama3</span>: |V| = 128,256 (tiktoken BPE)</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Left: Training Corpus & Vocabulary Builder -->
+      <div class="panel">
+        <h3>
+          <span>1A. Learn Vocabulary from Corpus</span>
+          <div class="seg-group" id="tok-algo-group">
+            <button class="seg-btn active" data-algo="wordpiece">WordPiece (##)</button>
+            <button class="seg-btn" data-algo="bpe">BPE (Merges)</button>
+          </div>
+        </h3>
+
+        <label class="field-label" for="corpus-input">Training corpus (sentences to learn tokens from)</label>
+        <textarea id="corpus-input" rows="5">The cat sat on the mat.
+The dog sat on the rug.
+The cat saw the dog!
+A dog and a cat can be friends.
+Do you like the cat?
+I don't like the rain, but I like the sun.</textarea>
+
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" id="build-vocab-btn">Rebuild Vocabulary</button>
+          <button class="btn btn-secondary btn-sm" data-corpus="animals">Preset: Animals</button>
+          <button class="btn btn-secondary btn-sm" data-corpus="cs">Preset: CS &amp; Code</button>
+        </div>
+
+        <div style="margin-top:14px;">
+          <label class="field-label" for="vocab-slider">
+            <span id="vocab-slider-label">Words kept in vocabulary:</span>
+            <strong id="vocab-slider-value" style="color:var(--accent);font-family:var(--font-mono);margin-left:6px;"></strong>
+          </label>
+          <input type="range" id="vocab-slider" min="1" max="30" value="30">
+          <p style="font-size:12.5px;color:var(--text-muted);margin:4px 0 10px;" id="vocab-slider-hint">
+            Drag left to shrink the vocabulary. Dropped words get split into smaller subword pieces — watch the token count grow!
+          </p>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
+          <span id="vocab-summary" style="font-size:12.5px;font-weight:600;color:var(--text-muted);"></span>
+          <input type="text" id="vocab-search" placeholder="Filter vocab..." style="max-width:160px;padding:4px 8px;font-size:12px;">
+        </div>
+        <div class="table-wrap" style="max-height:205px;">
+          <table>
+            <thead><tr id="vocab-thead"><th>ID</th><th>Token</th><th>Freq / Origin</th></tr></thead>
+            <tbody id="vocab-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right: Live Encoder & Output -->
+      <div class="panel">
+        <h3>
+          <span>1B. Encode Sentence → Token IDs</span>
+          <span class="tag-pill tag-indigo" id="tok-algo-badge">WordPiece Greedy</span>
+        </h3>
+
+        <label class="field-label" for="encode-input">Sentence to tokenize (synced with Live Pipeline Prompt)</label>
+        <textarea id="encode-input" rows="2" class="mono">The dogs liked the sunny zebra.</textarea>
+
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" id="tokenize-btn">Tokenize &amp; Push to Stage 2</button>
+          <span style="font-size:12px;color:var(--text-soft);">Updates live as you type or drag the vocab slider</span>
+        </div>
+
+        <div class="metrics-row" id="tok-metrics"></div>
+
+        <label class="field-label">Colored Token Chips <span style="font-weight:400;color:var(--text-soft);">(color deterministically mapped from Token ID)</span></label>
+        <div class="chips" id="tok-chips"></div>
+        <div id="tok-explain"></div>
+
+        <label class="field-label" style="margin-top:14px;">Exact Integer Tensor Input (<code>input_ids</code>)</label>
+        <div class="formula-box" id="tok-ids-tensor" style="font-size:12.5px;"></div>
+
+        <div id="bpe-merges-box" style="display:none;margin-top:12px;">
+          <label class="field-label">BPE Learned Merge Operations (in order)</label>
+          <div class="table-wrap" style="max-height:130px;">
+            <table>
+              <thead><tr><th>Step</th><th>Pair Merged</th><th>New Token</th><th>Count</th></tr></thead>
+              <tbody id="bpe-merges-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <details class="cs-deep-dive">
+      <summary>CS Deep Dive: WordPiece vs. BPE &amp; Byte-Level Fallback</summary>
+      <div class="dd-body">
+        <p><strong>WordPiece</strong> (used in BERT) scans an unknown word left-to-right and greedily takes the longest matching prefix in the vocabulary, marking continuation pieces with <code>##</code>. If a character isn't in the vocabulary, the word falls back to <code>[UNK]</code>.</p>
+        <p><strong>Byte-Pair Encoding (BPE)</strong> (used in GPT-2/3/4, Llama, Claude) starts with individual characters (or UTF-8 bytes so <code>[UNK]</code> is impossible!) and iteratively merges the most frequent adjacent pair of tokens until reaching target vocabulary size <code>|V|</code>. Notice how shrinking the slider directly increases sequence length <code>L</code>, which increases downstream attention cost quadratically (<code>O(L²)</code>).</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ==================== STAGE 2: EMBEDDINGS ==================== -->
+  <section class="stage-card" id="stage-2">
+    <div class="stage-header">
+      <div class="stage-title-group">
+        <div class="stage-num">02</div>
+        <div>
+          <h2>Token Embeddings (Lookup Matrix <code>E</code>)</h2>
+          <p class="stage-sub">Mapping meaningless integer IDs to dense, continuous semantic vectors in ℝᵈ.</p>
+        </div>
+      </div>
+      <div class="io-badge"><strong>int[L]</strong> → <strong>Matrix X ∈ ℝ^(L × d)</strong></div>
+    </div>
+
+    <div class="concept-grid">
+      <div class="callout">
+        <h4>Why Not Feed Token IDs Directly Into a Neural Net?</h4>
+        <p>
+          Token IDs are arbitrary hash keys: just because <code>cat = 4</code> and <code>dog = 5</code> doesn't mean <code>cat + dog = 9</code>.
+          Instead, an LLM learns a giant weight matrix <code>E</code> of shape <code>(|V| × d_model)</code>.
+        </p>
+        <p>
+          Fetching a token's embedding is mathematically equivalent to multiplying a <strong>one-hot vector</strong> by <code>E</code>, and in code it's simply an <code>O(1)</code> array row lookup: <code>vector = E[token_id]</code>.
+        </p>
+      </div>
+      <div class="formula-box">
+        <span class="f-label">Embedding Matrix Lookup</span>
+        <div><span class="hl">e_i</span> = one_hot(id_i) · <span class="hl-teal">E</span> = E[id_i, :]  ∈ ℝᵈ</div>
+        <div><span class="hl-amber">GPT-3</span>  : |V|=50,257 × d=12,288 ≈ 617M params</div>
+        <div><span class="hl-amber">Here</span>   : d = 20 interpretable semantic dimensions</div>
+        <div><span class="hl-teal">L2 Norm</span>: ‖e‖₂ = √(∑ eⱼ²)</div>
+      </div>
+    </div>
+
+    <div class="grid-2-asym">
+      <!-- Left: Token Inspector & Heatmap -->
+      <div class="panel">
+        <h3>
+          <span>2A. Inspect Any Token's Dense Vector</span>
+          <span class="tag-pill tag-teal">Click a token chip</span>
+        </h3>
+        <div class="chips" id="emb-token-chips"></div>
+
+        <div style="margin-top:14px;" id="emb-inspector-header"></div>
+        <div class="vec-heatmap" id="emb-vec-heatmap"></div>
+
+        <label class="field-label" style="margin-top:14px;">Raw Floating-Point Vector (<code>E[token_id]</code>)</label>
+        <div class="formula-box" id="emb-raw-vec" style="font-size:12px;"></div>
+      </div>
+
+      <!-- Right: Semantic Vector Arithmetic -->
+      <div class="panel">
+        <h3>
+          <span>2B. Vector Arithmetic Playground</span>
+          <span class="tag-pill tag-amber">Linear Meaning</span>
+        </h3>
+        <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">
+          Because learned embeddings encode semantic concepts as <em>directions</em> in ℝᵈ, analogies become linear algebra:
+        </p>
+
+        <div class="grid-3" style="gap:8px;align-items:end;">
+          <div>
+            <label class="field-label" for="arith-a">Vector A (+)</label>
+            <select id="arith-a"></select>
+          </div>
+          <div>
+            <label class="field-label" for="arith-b">Vector B (−)</label>
+            <select id="arith-b"></select>
+          </div>
+          <div>
+            <label class="field-label" for="arith-c">Vector C (+)</label>
+            <select id="arith-c"></select>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:10px;">
+          <button class="btn btn-secondary btn-sm" data-analogy="king,man,woman">king − man + woman</button>
+          <button class="btn btn-secondary btn-sm" data-analogy="puppy,dog,cat">puppy − dog + cat</button>
+          <button class="btn btn-secondary btn-sm" data-analogy="prince,boy,girl">prince − boy + girl</button>
+          <button class="btn btn-secondary btn-sm" data-analogy="father,man,woman">father − man + woman</button>
+        </div>
+
+        <div id="arith-result" style="margin-top:14px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STAGE 3: VECTORS, COSINE SIMILARITY & 3D PCA ==================== -->
+  <section class="stage-card" id="stage-3">
+    <div class="stage-header">
+      <div class="stage-title-group">
+        <div class="stage-num">03</div>
+        <div>
+          <h2>Vectors, Cosine Similarity &amp; 3D Embedding Space</h2>
+          <p class="stage-sub">Measuring semantic similarity via angles, comparing Lexical vs. Semantic vectors, and projecting high-D space to 3D via PCA.</p>
+        </div>
+      </div>
+      <div class="io-badge"><strong>ℝᵈ Vectors</strong> → <strong>cos(θ) &amp; 3D PCA</strong></div>
+    </div>
+
+    <div class="concept-grid">
+      <div class="callout">
+        <h4>Why Cosine Similarity Beats Euclidean Distance in LLMs</h4>
+        <p>
+          Two texts about the same topic (one short, one long) can have different vector magnitudes, giving a large Euclidean distance <code>‖A − B‖₂</code>.
+          <strong>Cosine Similarity</strong> measures only the <em>angle θ</em> between vectors: <code>+1.0</code> means identical direction, <code>0.0</code> means orthogonal (unrelated), and <code>−1.0</code> means opposite.
+        </p>
+        <p>
+          Since humans can't visualize 20D or 4,096D space, we use <strong>PCA (Principal Component Analysis)</strong> to find the top 3 orthogonal directions of maximum variance (<code>PC1, PC2, PC3</code>).
+        </p>
+      </div>
+      <div class="formula-box">
+        <span class="f-label">Similarity Metrics &amp; PCA Projection</span>
+        <div><span class="hl">Dot Product</span> : A · B = ∑ Aᵢ Bᵢ = ‖A‖ ‖B‖ cos(θ)</div>
+        <div><span class="hl-teal">Cosine Sim</span>  : cos(θ) = (A · B) / (‖A‖₂ · ‖B‖₂)</div>
+        <div><span class="hl-amber">L2 Distance</span> : d(A,B) = √(∑ (Aᵢ − Bᵢ)²)</div>
+        <div><span class="hl">PCA 3D</span>      : Z = (X − μ) · [v₁, v₂, v₃] (top-3 eigenvecs of Cov)</div>
+      </div>
+    </div>
+
+    <!-- 3A: Interactive 2D Cosine Sandbox -->
+    <div class="panel" style="margin-bottom:20px;">
+      <h3>
+        <span>3A. Interactive 2D Vector &amp; Cosine Angle Lab</span>
+        <span class="tag-pill tag-indigo">Drag arrowheads A &amp; B on canvas</span>
+      </h3>
+      <div class="grid-2-asym">
+        <div class="canvas-box">
+          <canvas id="cosine-2d-canvas" width="560" height="310"></canvas>
+          <div class="canvas-hud">
+            <span class="hud-pill">Drag tips of <strong style="color:#4f46e5">A</strong> or <strong style="color:#0d9488">B</strong></span>
+          </div>
+        </div>
+        <div>
+          <div class="metrics-row" style="grid-template-columns:1fr 1fr;margin-top:0;">
+            <div class="metric-card">
+              <div class="m-val" id="c2d-cos" style="color:var(--accent);">0.866</div>
+              <div class="m-lbl">Cosine Similarity cos(θ)</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-val" id="c2d-deg">30.0°</div>
+              <div class="m-lbl">Angle θ (degrees)</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-val" id="c2d-dot">0.00</div>
+              <div class="m-lbl">Dot Product (A · B)</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-val" id="c2d-l2">0.00</div>
+              <div class="m-lbl">Euclidean Distance ‖A−B‖₂</div>
+            </div>
+          </div>
+
+          <label class="field-label">Vector A Magnitude: <span id="c2d-maga-val" class="mono"></span></label>
+          <input type="range" id="c2d-maga" min="0.4" max="2.4" step="0.05" value="1.6">
+          <label class="field-label">Vector B Magnitude: <span id="c2d-magb-val" class="mono"></span></label>
+          <input type="range" id="c2d-magb" min="0.4" max="2.4" step="0.05" value="1.3">
+
+          <div class="hint-info" style="margin-top:10px;">
+            <strong>Try this:</strong> Drag the magnitude sliders above. Notice how <em>Dot Product</em> and <em>Euclidean Distance</em> change dramatically, while <strong>Cosine Similarity stays completely invariant</strong>!
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-secondary btn-sm" data-c2d="aligned">Aligned (0°)</button>
+            <button class="btn btn-secondary btn-sm" data-c2d="ortho">Orthogonal (90°)</button>
+            <button class="btn btn-secondary btn-sm" data-c2d="opposite">Opposite (180°)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3B: 3D Sentence Embedding Explorer (Reference Site Upgraded!) -->
+    <div class="panel">
+      <h3>
+        <span>3B. Sentence Embeddings in 3D Space (PCA Projection)</span>
+        <div class="seg-group" id="embed-mode-group">
+          <button class="seg-btn active" data-emode="semantic">Semantic Embeddings (20D)</button>
+          <button class="seg-btn" data-emode="lexical">Spelling Trigrams (64D)</button>
+        </div>
+      </h3>
+
+      <div id="embed-mode-note" class="hint-info" style="margin:0 0 14px;">
+        <strong>Semantic Mode:</strong> Sentences cluster by <em>meaning</em> — notice <em>"The cat sat on the mat."</em> clusters near <em>"A kitten rested on the rug."</em>, while <em>"Pythons are large snakes."</em> separates from <em>"Coding in Python is my passion."</em> Toggle to <strong>Spelling Trigrams</strong> to see why naive character hashing fails!
+      </div>
+
+      <div class="grid-2-asym">
+        <!-- Left: 3D Interactive Canvas -->
+        <div>
+          <div class="canvas-box">
+            <canvas id="pca-3d-canvas" width="660" height="460"></canvas>
+            <div class="canvas-hud">
+              <span class="hud-pill" id="pca-var-hud">PCA Variance: --</span>
+              <button class="hud-pill" id="pca-reset-cam" style="cursor:pointer;">Reset View</button>
+              <button class="hud-pill" id="pca-rays-toggle" style="cursor:pointer;">Origin Rays: ON</button>
+            </div>
+            <div class="canvas-tooltip" id="pca-tooltip"></div>
+          </div>
+          <p style="font-size:12px;color:var(--text-soft);margin:6px 0 0;">
+            Drag to orbit 3D space · Scroll to zoom · Hover points to inspect · Orange star = your custom sentence.
+          </p>
+        </div>
+
+        <!-- Right: Sentence list + Try your own word -->
+        <div>
+          <label class="field-label" for="sentences-input">Sentences (one per line, min 4)</label>
+          <textarea id="sentences-input" rows="8">The cat sat on the mat.
+A kitten rested on the rug.
+The bat sat on the mat.
+I love programming in Python.
+Coding in Python is my passion.
+Pythons are large snakes.
+The stock market crashed today.
+Share prices fell sharply.</textarea>
+
+          <div class="btn-row">
+            <button class="btn btn-primary btn-sm" id="embed-plot-btn">Embed &amp; Plot 3D</button>
+            <span id="embed-status" style="font-size:12.5px;color:var(--rose);font-weight:600;"></span>
+          </div>
+
+          <div class="panel-white" style="margin-top:14px;">
+            <label class="field-label" for="custom-word-input" style="margin-top:0;">
+              Try Your Own Word or Sentence (Full Pipeline Trace)
+            </label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="custom-word-input" placeholder="e.g. puppy, or: My dog sleeps on the carpet.">
+              <button class="btn btn-primary btn-sm" id="add-custom-word-btn" style="white-space:nowrap;">Trace &amp; Add</button>
+            </div>
+            <div id="custom-word-trace" style="margin-top:10px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Closest Pairs & Full Similarity Matrix -->
+      <div class="grid-2" style="margin-top:18px;">
+        <div>
+          <label class="field-label" style="margin-top:0;">Top-5 Closest Sentence Pairs (Exact Full-Dimensional Cosine)</label>
+          <div class="table-wrap" style="max-height:220px;">
+            <table>
+              <thead><tr><th>Sentence A</th><th>Sentence B</th><th>cos(θ)</th></tr></thead>
+              <tbody id="closest-pairs-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <label class="field-label" style="margin-top:0;">Pairwise Cosine Similarity Matrix</label>
+          <div class="sim-matrix" id="sim-matrix-wrap"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STAGE 4: POSITIONAL ENCODING ==================== -->
+  <section class="stage-card" id="stage-4">
+    <div class="stage-header">
+      <div class="stage-title-group">
+        <div class="stage-num">04</div>
+        <div>
+          <h2>Positional Encoding (Injecting Word Order)</h2>
+          <p class="stage-sub">Transformers process all tokens in parallel—without positional signals, "Dog bites man" equals "Man bites dog".</p>
+        </div>
+      </div>
+      <div class="io-badge"><strong>E(tok) + PE(pos)</strong> → <strong>X₀ ∈ ℝ^(L × d)</strong></div>
+    </div>
+
+    <div class="concept-grid">
+      <div class="callout">
+        <h4>Sinusoidal Waves as a Binary Clock</h4>
+        <p>
+          In the original Transformer (Vaswani et al., 2017), each position <code>pos</code> gets a unique fingerprint made of sine and cosine waves across dimensions: low dimensions oscillate rapidly (fine local distance), high dimensions oscillate slowly (long-range order).
+        </p>
+        <p>
+          Adding <code>PE(pos)</code> directly to the token embedding lets attention layers linearly compute <strong>relative offsets</strong> (<code>pos + k</code>). Modern LLMs (Llama, Gemma, Qwen) refine this into <strong>RoPE</strong> (rotating Q/K vectors by angle <code>pos · θᵢ</code>).
+        </p>
+      </div>
+      <div class="formula-box">
+        <span class="f-label">Sinusoidal Positional Encoding</span>
+        <div><span class="hl">PE(pos, 2i)</span>   = sin( pos / 10000^(2i / d) )</div>
+        <div><span class="hl-teal">PE(pos, 2i+1)</span> = cos( pos / 10000^(2i / d) )</div>
+        <div><span class="hl-amber">Model Input</span>   : X[pos] = E[token_id] + PE(pos)</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>
+          <span>4A. Positional Encoding Heatmap (Position × Dimension)</span>
+          <span class="tag-pill tag-indigo" id="pe-dim-badge">d = 16</span>
+        </h3>
+        <div class="canvas-box">
+          <canvas id="pe-heatmap-canvas" width="540" height="270"></canvas>
+          <div class="canvas-tooltip" id="pe-tooltip"></div>
+        </div>
+        <p style="font-size:12px;color:var(--text-soft);margin:8px 0 0;">
+          Left columns = high-frequency waves (flip every token); right columns = low-frequency waves (smooth across context). Hover any cell to inspect.
+        </p>
+      </div>
+
+      <div class="panel">
+        <h3>
+          <span>4B. Relative Distance Similarity Explorer</span>
+          <span class="tag-pill tag-teal">PE(p₁) · PE(p₂)</span>
+        </h3>
+        <label class="field-label">Compare Position A: <strong id="pe-p1-val" class="mono"></strong></label>
+        <input type="range" id="pe-p1" min="0" max="15" value="2">
+
+        <label class="field-label">Compare Position B: <strong id="pe-p2-val" class="mono"></strong></label>
+        <input type="range" id="pe-p2" min="0" max="15" value="5">
+
+        <div class="metrics-row" style="grid-template-columns:1fr 1fr;">
+          <div class="metric-card">
+            <div class="m-val" id="pe-dist-val">3</div>
+            <div class="m-lbl">Token Distance |p₁ − p₂|</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-val" id="pe-cos-val" style="color:var(--teal);">0.000</div>
+            <div class="m-lbl">PE Cosine Similarity</div>
+          </div>
+        </div>
+
+        <label class="field-label">Sinusoidal Waveforms (dims 0, 2, 4, 8)</label>
+        <div class="canvas-box">
+          <canvas id="pe-waves-canvas" width="520" height="145"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STAGE 5: SELF-ATTENTION ==================== -->
+  <section class="stage-card" id="stage-5">
+    <div class="stage-header">
+      <div class="stage-title-group">
+        <div class="stage-num">05</div>
+        <div>
+          <h2>Self-Attention Mechanism (Q, K, V &amp; Causal Mask)</h2>
+          <p class="stage-sub">How every token dynamically gathers context from other tokens to resolve meaning (e.g., what does "it" or "bank" refer to?).</p>
+        </div>
+      </div>
+      <div class="io-badge"><strong>X ∈ ℝ^(L×d)</strong> → <strong>Context-Aware Z ∈ ℝ^(L×d)</strong></div>
+    </div>
+
+    <div class="concept-grid">
+      <div class="callout">
+        <h4>The Database Lookup Analogy (Query, Key, Value)</h4>
+        <p>
+          Every token vector <code>xᵢ</code> is linearly projected into three roles:
+          <strong>Query (Q)</strong> = "What context am I searching for?",
+          <strong>Key (K)</strong> = "What label do I advertise?",
+          <strong>Value (V)</strong> = "What payload do I contribute if attended to?".
+        </p>
+        <p>
+          Dividing by <code>√d_k</code> keeps dot products from growing too large (which would push <code>softmax</code> into vanishing-gradient plateaus). In decoder LLMs (GPT/Llama), a <strong>Causal Mask</strong> sets future positions to <code>−∞</code> so token <code>t</code> can only attend to <code>≤ t</code>.
+        </p>
+      </div>
+      <div class="formula-box">
+        <span class="f-label">Scaled Dot-Product Multi-Head Attention</span>
+        <div><span class="hl">Q</span> = X·W_Q,  <span class="hl-teal">K</span> = X·W_K,  <span class="hl-amber">V</span> = X·W_V</div>
+        <div><span class="hl">Scores</span>  = (Q · Kᵀ) / √d_k  +  Mask</div>
+        <div><span class="hl-teal">Weights</span> = softmax(Scores, axis=-1)   <span style="color:#94a3b8">// rows sum to 1</span></div>
+        <div><span class="hl-amber">Output</span>  = Weights · V                <span style="color:#94a3b8">// Complexity: O(L² · d)</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+          <span style="font-size:13px;font-weight:700;">Attention Head:</span>
+          <div class="seg-group" id="attn-head-group">
+            <button class="seg-btn active" data-head="semantic">Head 1: Semantic / Coreference</button>
+            <button class="seg-btn" data-head="syntax">Head 2: Local Syntax</button>
+            <button class="seg-btn" data-head="broad">Head 3: Topic / Broad</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;cursor:pointer;">
+            <input type="checkbox" id="attn-causal-toggle" checked style="width:16px;height:16px;accent-color:var(--accent);">
+            Causal Mask (Decoder / GPT-style)
+          </label>
+        </div>
+      </div>
+
+      <div class="preset-row" style="margin-bottom:14px;">
+        <span style="font-size:12px;color:var(--text-soft);align-self:center;margin-right:4px;">Try Attention Sentence:</span>
+        <button class="preset-chip" data-attn-sent="The animal didn't cross the street because it was too tired">Coreference ("it" → "animal")</button>
+        <button class="preset-chip" data-attn-sent="The bank by the river was flooded">Polysemy ("bank" → "river")</button>
+        <button class="preset-chip" data-attn-sent="The cat sat on the mat">Simple syntax ("cat sat mat")</button>
+        <button class="preset-chip" id="attn-use-global">Use Global Prompt</button>
+      </div>
+
+      <!-- Visual Attention Arc Diagram -->
+      <div class="canvas-box" style="margin-bottom:16px;">
+        <canvas id="attn-arc-canvas" width="1100" height="210"></canvas>
+        <div class="canvas-hud">
+          <span class="hud-pill" id="attn-selected-hud">Click any token below or row in the matrix to inspect its attention weights</span>
+        </div>
+      </div>
+
+      <div class="grid-2-asym">
+        <div>
+          <label class="field-label" style="margin-top:0;">Attention Weight Matrix <code>softmax(QKᵀ/√d + M)</code> <span style="font-weight:400;color:var(--text-soft);">(Rows = Query, Cols = Key)</span></label>
+          <div class="attn-grid-wrap" id="attn-matrix-wrap"></div>
+        </div>
+        <div class="panel-white">
+          <h3 style="margin-top:0;font-size:14px;">Selected Query Token Breakdown</h3>
+          <div id="attn-breakdown"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STAGE 6: TRANSFORMER BLOCK ==================== -->
+  <section class="stage-card" id="stage-6">
+    <div class="stage-header">
+      <div class="stage-title-group">
+        <div class="stage-num">06</div>
+        <div>
+          <h2>Transformer Decoder Block &amp; Scale Calculator</h2>
+          <p class="stage-sub">Stacking Attention, Residual Streams, LayerNorm, and Feed-Forward Networks (MLP) across N layers.</p>
+        </div>
+      </div>
+      <div class="io-badge"><strong>Repeat × N Layers</strong> → <strong>Final Hidden State h_T</strong></div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Left: Interactive Pre-LN Block Step-Through -->
+      <div class="panel">
+        <h3>
+          <span>6A. Inside a Modern Pre-LN Transformer Block</span>
+          <span class="tag-pill tag-indigo">Click any layer</span>
+        </h3>
+        <div class="arch-flow" id="arch-flow">
+          <div class="arch-node active" data-block="input">
+            <div class="an-left"><span class="arch-badge">IN</span><strong>Residual Stream Input <code>x</code></strong></div>
+            <span class="mono" style="font-size:12px;color:var(--text-soft);">shape (L, d)</span>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-node" data-block="ln1">
+            <div class="an-left"><span class="arch-badge">NORM</span><strong>LayerNorm / RMSNorm</strong></div>
+            <span class="mono" style="font-size:12px;color:var(--text-soft);">μ=0, σ=1</span>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-node" data-block="mha">
+            <div class="an-left"><span class="arch-badge">ATTN</span><strong>Masked Multi-Head Self-Attention</strong></div>
+            <span class="mono" style="font-size:12px;color:var(--text-soft);">mixes tokens</span>
+          </div>
+          <div class="arch-arrow">↓  + skip connection (x)</div>
+          <div class="arch-node" data-block="res1">
+            <div class="an-left"><span class="arch-badge">ADD</span><strong>Residual Addition 1: <code>h = x + MHA(LN(x))</code></strong></div>
+            <span class="mono" style="font-size:12px;color:var(--text-soft);">gradient highway</span>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-node" data-block="ffn">
+            <div class="an-left"><span class="arch-badge">MLP</span><strong>Feed-Forward Network (<code>d → 4d → d</code> + GELU/SwiGLU)</strong></div>
+            <span class="mono" style="font-size:12px;color:var(--text-soft);">~2/3 of params</span>
+          </div>
+          <div class="arch-arrow">↓  + skip connection (h)</div>
+          <div class="arch-node" data-block="out">
+            <div class="an-left"><span class="arch-badge">OUT</span><strong>Block Output <code>y = h + FFN(LN(h))</code></strong></div>
+            <span class="mono" style="font-size:12px;color:var(--text-soft);">→ Next Layer</span>
+          </div>
+        </div>
+
+        <div class="panel-white" style="margin-top:14px;" id="arch-detail-box"></div>
+      </div>
+
+      <!-- Right: Live LLM Parameter & KV-Cache Systems Calculator -->
+      <div class="panel">
+        <h3>
+          <span>6B. CS Systems Lab: Parameter &amp; Memory Estimator</span>
+          <span class="tag-pill tag-teal">Real Scaling Math</span>
+        </h3>
+        <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">
+          Explore how architectural hyperparameters drive parameter counts and GPU VRAM (FP16 / BF16):
+        </p>
+
+        <div class="btn-row" style="margin-top:0;margin-bottom:12px;">
+          <button class="btn btn-secondary btn-sm" data-model="gpt2">GPT-2 Small</button>
+          <button class="btn btn-secondary btn-sm" data-model="llama8b">Llama-3 8B</button>
+          <button class="btn btn-secondary btn-sm" data-model="llama70b">Llama-3 70B</button>
+        </div>
+
+        <label class="field-label">Transformer Layers (<code>N</code>): <strong id="calc-L-val" class="mono"></strong></label>
+        <input type="range" id="calc-L" min="4" max="80" step="2" value="32">
+
+        <label class="field-label">Model Dimension (<code>d_model</code>): <strong id="calc-d-val" class="mono"></strong></label>
+        <input type="range" id="calc-d" min="256" max="8192" step="256" value="4096">
+
+        <label class="field-label">Vocabulary Size (<code>|V|</code>): <strong id="calc-V-val" class="mono"></strong></label>
+        <input type="range" id="calc-V" min="16000" max="128000" step="8000" value="128000">
+
+        <label class="field-label">Context Length for KV-Cache (<code>seq_len</code>): <strong id="calc-S-val" class="mono"></strong></label>
+        <input type="range" id="calc-S" min="512" max="32768" step="512" value="8192">
+
+        <div class="metrics-row" style="grid-template-columns:1fr 1fr;margin-top:14px;">
+          <div class="metric-card">
+            <div class="m-val" id="calc-params" style="color:var(--accent);">--</div>
+            <div class="m-lbl">Est. Total Parameters</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-val" id="calc-vram" style="color:var(--teal);">--</div>
+            <div class="m-lbl">Weights VRAM (BF16)</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-val" id="calc-kv" style="color:var(--amber);">--</div>
+            <div class="m-lbl">KV-Cache (Full MHA, 1 req)</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-val" id="calc-ffn-pct">--</div>
+            <div class="m-lbl">Share of Params in FFNs</div>
+          </div>
+        </div>
+
+        <div class="formula-box" style="margin-top:10px;font-size:12px;">
+          <span class="f-label">Per-Layer Parameter Breakdown</span>
+          <div><span class="hl">Attention</span> ≈ 4 · d²  (W_Q, W_K, W_V, W_O)</div>
+          <div><span class="hl-teal">FFN (4d)</span>  ≈ 8 · d²  (W_up, W_down; ~12d² for SwiGLU)</div>
+          <div><span class="hl-amber">KV-Cache</span>  = 2 · N · seq_len · d · 2 bytes (FP16)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STAGE 7: LOGITS, SOFTMAX & SAMPLING ==================== -->
+  <section class="stage-card" id="stage-7">
+    <div class="stage-header">
+      <div class="stage-title-group">
+        <div class="stage-num">07</div>
+        <div>
+          <h2>Logits, Softmax &amp; Autoregressive Sampling</h2>
+          <p class="stage-sub">Turning the final hidden vector into a probability distribution over the entire vocabulary—and picking the next token.</p>
+        </div>
+      </div>
+      <div class="io-badge"><strong>h_T ∈ ℝᵈ</strong> → <strong>P(next | context)</strong> → <strong>Append &amp; Loop ↻</strong></div>
+    </div>
+
+    <div class="concept-grid">
+      <div class="callout">
+        <h4>How Temperature, Top-K &amp; Top-P Control Generation</h4>
+        <p>
+          The final layer multiplies the last token's hidden state by the unembedding matrix to produce raw scores called <strong>logits</strong> (<code>z ∈ ℝ^|V|</code>).
+          Dividing by <strong>Temperature <code>T</code></strong> before Softmax reshapes entropy: <code>T → 0</code> approaches deterministic greedy decoding; <code>T &gt; 1</code> flattens probabilities for higher creativity/randomness.
+        </p>
+        <p>
+          <strong>Top-K</strong> keeps only the <code>k</code> most probable tokens; <strong>Top-P (Nucleus)</strong> keeps the smallest set of top tokens whose cumulative probability reaches <code>p</code>. The sampled token is appended to the prompt and the whole pipeline repeats!
+        </p>
+      </div>
+      <div class="formula-box">
+        <span class="f-label">Temperature-Scaled Softmax &amp; Shannon Entropy</span>
+        <div><span class="hl">P(wᵢ)</span> = exp(zᵢ / T) / ∑ⱼ exp(zⱼ / T)</div>
+        <div><span class="hl-teal">Entropy</span> H(P) = − ∑ P(wᵢ) · log₂ P(wᵢ)  (bits)</div>
+        <div><span class="hl-amber">Loop</span>   : prompt ← prompt + [sampled_token]</div>
+      </div>
+    </div>
+
+    <div class="grid-2-asym">
+      <!-- Left: Probability Distribution Visualizer -->
+      <div class="panel">
+        <h3>
+          <span>7A. Next-Token Probability Distribution</span>
+          <span class="tag-pill tag-emerald" id="samp-entropy-pill">Entropy: -- bits</span>
+        </h3>
+
+        <label class="field-label" for="samp-context-select">Prompt Context</label>
+        <select id="samp-context-select">
+          <option value="cat">The cat sat on the ___</option>
+          <option value="python">In Python, a hash map is called a ___</option>
+          <option value="stock">After the earnings report, stock prices ___</option>
+          <option value="space">The telescope captured a distant ___</option>
+        </select>
+
+        <div id="samp-bars-container" style="margin-top:14px;display:flex;flex-direction:column;gap:4px;"></div>
+
+        <div class="panel-white" style="margin-top:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <span style="font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--accent);">Autoregressive Output Stream</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-primary btn-sm" id="sample-once-btn">Sample Next Token</button>
+              <button class="btn btn-secondary btn-sm" id="sample-reset-btn">Reset</button>
+            </div>
+          </div>
+          <div id="samp-stream" style="margin-top:10px;font-family:var(--font-mono);font-size:14.5px;line-height:1.7;"></div>
+        </div>
+      </div>
+
+      <!-- Right: Sampling Hyperparameters -->
+      <div class="panel">
+        <h3><span>7B. Decoding Controls</span></h3>
+
+        <label class="field-label">Temperature (<code>T</code>): <strong id="samp-temp-val" class="mono" style="color:var(--accent);">0.80</strong></label>
+        <input type="range" id="samp-temp" min="0.10" max="2.00" step="0.05" value="0.80">
+        <p style="font-size:12px;color:var(--text-soft);margin:2px 0 12px;">Low T (0.1–0.4) = deterministic/factual · High T (1.2–2.0) = flat/creative</p>
+
+        <label class="field-label">Top-K Cutoff (<code>k</code>): <strong id="samp-topk-val" class="mono" style="color:var(--teal);">8</strong></label>
+        <input type="range" id="samp-topk" min="1" max="8" step="1" value="8">
+        <p style="font-size:12px;color:var(--text-soft);margin:2px 0 12px;">Zeroes out all tokens ranked below top-k before renormalizing.</p>
+
+        <label class="field-label">Top-P Nucleus (<code>p</code>): <strong id="samp-topp-val" class="mono" style="color:var(--amber);">0.95</strong></label>
+        <input type="range" id="samp-topp" min="0.15" max="1.00" step="0.05" value="0.95">
+        <p style="font-size:12px;color:var(--text-soft);margin:2px 0 14px;">Keeps smallest prefix of tokens whose cumulative mass ≥ p.</p>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary btn-sm" data-decode="greedy">Greedy (T=0.1, K=1)</button>
+          <button class="btn btn-secondary btn-sm" data-decode="balanced">Balanced (T=0.8, P=0.9)</button>
+          <button class="btn btn-secondary btn-sm" data-decode="creative">Creative (T=1.5, P=0.95)</button>
+        </div>
+
+        <div class="metrics-row" style="grid-template-columns:1fr 1fr;margin-top:14px;">
+          <div class="metric-card">
+            <div class="m-val" id="samp-active-cnt">8 / 8</div>
+            <div class="m-lbl">Candidate Tokens Kept</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-val" id="samp-top1-prob">--%</div>
+            <div class="m-lbl">Top-1 Probability</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <strong>LLM Pipeline Explorer</strong> · Built as a self-contained single-file educational workbench for Computer Science students · Zero external runtime dependencies.
+  </footer>
+</main>
+
+<script>
+// ============================================================================
+// UTILITY HELPERS & THEME / NAVIGATION
+// ============================================================================
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+function dot(a, b) {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += a[i] * b[i];
+  return s;
+}
+function norm(v) {
+  return Math.sqrt(dot(v, v));
+}
+function normalize(v) {
+  const n = norm(v) || 1;
+  return v.map(x => x / n);
+}
+function cosineSim(a, b) {
+  const d = norm(a) * norm(b);
+  return d === 0 ? 0 : dot(a, b) / d;
+}
+function hashString(s) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h;
+}
+function colorForId(id) {
+  const hue = (id * 47 + 15) % 360;
+  return `hsl(${hue}, 78%, 87%)`;
+}
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// Theme toggle
+const themeBtn = $("theme-toggle");
+themeBtn.addEventListener("click", () => {
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  html.setAttribute("data-theme", isDark ? "light" : "dark");
+  $("theme-icon").textContent = isDark ? "☾" : "☀";
+  $("theme-label").textContent = isDark ? "Dark" : "Light";
+  redrawAllCanvases();
+});
+
+// Scroll progress & active nav pill
+window.addEventListener("scroll", () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  $("scroll-progress").style.width = (docHeight > 0 ? (scrollTop / docHeight) * 100 : 0) + "%";
+
+  const stages = document.querySelectorAll(".stage-card");
+  let currentId = "stage-1";
+  stages.forEach(sec => {
+    if (sec.getBoundingClientRect().top <= 140) currentId = sec.id;
+  });
+  document.querySelectorAll(".nav-pill").forEach(pill => {
+    pill.classList.toggle("active", pill.getAttribute("href") === "#" + currentId);
+  });
+});
+
+// ============================================================================
+// STAGE 1: TOKENIZER (WORDPIECE & REAL ITERATIVE BPE)
+// ============================================================================
+const CORPUS_PRESETS = {
+  animals: `The cat sat on the mat.
+The dog sat on the rug.
+The cat saw the dog!
+A dog and a cat can be friends.
+Do you like the cat?
+I don't like the rain, but I like the sun.`,
+  cs: `Python functions return clean values.
+The compiler optimizes the binary tree and hash map.
+Neural networks learn dense vector embeddings from tokens.
+Attention computes queries, keys, and values in parallel.
+A dictionary maps keys to values in constant time.`
+};
+
+const COMMON_ENDINGS = ["##s", "##es", "##ed", "##ing", "##er", "##ly", "##y"];
+let tokAlgo = "wordpiece"; // 'wordpiece' | 'bpe'
+let wpVocab = {};
+let wpSortedWords = [];
+let wpWordCounts = {};
+let wpSubwordPieces = [];
+let bpeMerges = [];       // [{pair:[a,b], merged, count}]
+let bpeBaseVocab = [];    // sorted unique chars + '</w>'
+let bpeActiveVocab = {};  // token -> id
+let bpeMaxMerges = 40;
+let currentTokens = [];   // [{text, id, subword, reason}]
+
+function splitIntoWords(text) {
+  let t = text.toLowerCase();
+  t = t.replace(/([.,!?;:'"()\-])/g, " $1 ");
+  return t.split(/\s+/).filter(w => w !== "");
+}
+
+function buildWordPieceModel(corpusText) {
+  const words = splitIntoWords(corpusText);
+  wpWordCounts = {};
+  for (const w of words) wpWordCounts[w] = (wpWordCounts[w] || 0) + 1;
+  wpSortedWords = Object.keys(wpWordCounts).sort((a, b) => wpWordCounts[b] - wpWordCounts[a] || a.localeCompare(b));
+  const letters = [...new Set(words.join("").replace(/[^a-z0-9]/g, ""))].sort();
+  wpSubwordPieces = [...COMMON_ENDINGS, ...letters, ...letters.map(ch => "##" + ch)];
+}
+
+function applyWordPieceVocabSize(n) {
+  const kept = wpSortedWords.slice(0, n);
+  wpVocab = { "[UNK]": 0 };
+  const rows = [{ id: 0, token: "[UNK]", meta: "special" }];
+  kept.forEach(w => {
+    const id = Object.keys(wpVocab).length;
+    wpVocab[w] = id;
+    rows.push({ id, token: w, meta: `freq: ${wpWordCounts[w]}` });
+  });
+  wpSubwordPieces.forEach(p => {
+    if (p in wpVocab) return;
+    const id = Object.keys(wpVocab).length;
+    wpVocab[p] = id;
+    rows.push({ id, token: p, meta: "subword" });
+  });
+  return { keptCount: kept.length, totalWords: wpSortedWords.length, rows };
+}
+
+function encodeWordPiece(text) {
+  const tokens = [];
+  for (const word of splitIntoWords(text)) {
+    if (word in wpVocab) {
+      tokens.push({ text: word, id: wpVocab[word], subword: false, reason: "Exact match in vocabulary" });
+    } else {
+      const pieces = [];
+      let start = 0;
+      let failed = false;
+      while (start < word.length) {
+        let found = null;
+        for (let end = word.length; end > start; end--) {
+          let piece = word.slice(start, end);
+          if (start > 0) piece = "##" + piece;
+          if (piece in wpVocab) { found = piece; break; }
+        }
+        if (found === null) { failed = true; break; }
+        pieces.push({
+          text: found,
+          id: wpVocab[found],
+          subword: true,
+          reason: `Split from OOV word "${word}"`
+        });
+        start += found.replace(/^##/, "").length;
+      }
+      if (failed) {
+        tokens.push({ text: "[UNK]", id: 0, subword: true, reason: `Unmatched characters in "${word}"` });
+      } else {
+        tokens.push(...pieces);
+      }
+    }
+  }
+  return tokens;
+}
+
+// Real Iterative BPE training
+function buildBPEModel(corpusText) {
+  const words = splitIntoWords(corpusText);
+  const wordFreq = {};
+  for (const w of words) wordFreq[w] = (wordFreq[w] || 0) + 1;
+
+  // Represent each word as array of chars + end-of-word marker '▁'
+  let vocabWords = Object.entries(wordFreq).map(([w, freq]) => ({
+    syms: [...w.split(""), "▁"],
+    freq
+  }));
+
+  const charSet = new Set();
+  vocabWords.forEach(item => item.syms.forEach(c => charSet.add(c)));
+  bpeBaseVocab = [...charSet].sort();
+  bpeMerges = [];
+
+  for (let step = 0; step < 60; step++) {
+    const pairCounts = {};
+    for (const item of vocabWords) {
+      for (let i = 0; i < item.syms.length - 1; i++) {
+        const key = item.syms[i] + "\u0001" + item.syms[i + 1];
+        pairCounts[key] = (pairCounts[key] || 0) + item.freq;
+      }
+    }
+    let bestKey = null, bestCount = 1;
+    for (const [k, c] of Object.entries(pairCounts)) {
+      if (c > bestCount) { bestCount = c; bestKey = k; }
+    }
+    if (!bestKey) break;
+    const [a, b] = bestKey.split("\u0001");
+    const merged = a + b;
+    bpeMerges.push({ pair: [a, b], merged, count: bestCount });
+
+    // Apply merge to all corpus words
+    for (const item of vocabWords) {
+      const next = [];
+      for (let i = 0; i < item.syms.length; i++) {
+        if (i < item.syms.length - 1 && item.syms[i] === a && item.syms[i + 1] === b) {
+          next.push(merged);
+          i++;
+        } else {
+          next.push(item.syms[i]);
+        }
+      }
+      item.syms = next;
+    }
+  }
+  bpeMaxMerges = bpeMerges.length;
+}
+
+function applyBPEMergeCount(numMerges) {
+  bpeActiveVocab = { "[UNK]": 0 };
+  const rows = [{ id: 0, token: "[UNK]", meta: "special" }];
+  bpeBaseVocab.forEach(ch => {
+    const id = Object.keys(bpeActiveVocab).length;
+    bpeActiveVocab[ch] = id;
+    rows.push({ id, token: ch, meta: "base char" });
+  });
+  const used = bpeMerges.slice(0, numMerges);
+  used.forEach((m, idx) => {
+    if (!(m.merged in bpeActiveVocab)) {
+      const id = Object.keys(bpeActiveVocab).length;
+      bpeActiveVocab[m.merged] = id;
+      rows.push({ id, token: m.merged, meta: `merge #${idx + 1} (${m.pair[0]}+${m.pair[1]})` });
+    }
+  });
+  return { usedMerges: used, rows };
+}
+
+function encodeBPE(text, numMerges) {
+  const activeMerges = bpeMerges.slice(0, numMerges);
+  const tokens = [];
+  for (const word of splitIntoWords(text)) {
+    let syms = [...word.split(""), "▁"];
+    for (const m of activeMerges) {
+      const next = [];
+      for (let i = 0; i < syms.length; i++) {
+        if (i < syms.length - 1 && syms[i] === m.pair[0] && syms[i + 1] === m.pair[1]) {
+          next.push(m.merged);
+          i++;
+        } else {
+          next.push(syms[i]);
+        }
+      }
+      syms = next;
+    }
+    const isSplit = syms.length > 1;
+    for (const s of syms) {
+      const id = (s in bpeActiveVocab) ? bpeActiveVocab[s] : 0;
+      tokens.push({
+        text: id === 0 ? "[UNK]" : s,
+        id,
+        subword: isSplit || id === 0,
+        reason: id === 0 ? `Char "${s}" unseen in training corpus` : (isSplit ? `BPE subword of "${word}"` : `Single merged BPE token`)
+      });
+    }
+  }
+  return tokens;
+}
+
+let cachedVocabRows = [];
+function rebuildTokenizer(resetSlider = true) {
+  const corpus = $("corpus-input").value;
+  buildWordPieceModel(corpus);
+  buildBPEModel(corpus);
+
+  const slider = $("vocab-slider");
+  if (tokAlgo === "wordpiece") {
+    $("vocab-slider-label").textContent = "Whole words kept in vocabulary:";
+    $("vocab-slider-hint").textContent = "Drag left to shrink the vocabulary. Dropped words get split into smaller subword pieces (##) — watch token count grow.";
+    $("tok-algo-badge").textContent = "WordPiece Greedy";
+    $("bpe-merges-box").style.display = "none";
+    slider.min = 1;
+    slider.max = Math.max(1, wpSortedWords.length);
+    if (resetSlider || Number(slider.value) > Number(slider.max)) slider.value = slider.max;
+  } else {
+    $("vocab-slider-label").textContent = "BPE merge operations applied:";
+    $("vocab-slider-hint").textContent = "Drag from 0 (pure character-level) rightward to watch frequent adjacent pairs merge into whole subwords and words.";
+    $("tok-algo-badge").textContent = "Byte-Pair Encoding";
+    $("bpe-merges-box").style.display = "block";
+    slider.min = 0;
+    slider.max = Math.max(1, bpeMaxMerges);
+    if (resetSlider || Number(slider.value) > Number(slider.max)) slider.value = slider.max;
+  }
+  updateVocabAndTokenize();
+}
+
+function updateVocabAndTokenize() {
+  const sliderVal = Number($("vocab-slider").value);
+  if (tokAlgo === "wordpiece") {
+    const res = applyWordPieceVocabSize(sliderVal);
+    cachedVocabRows = res.rows;
+    $("vocab-slider-value").textContent = `${res.keptCount} / ${res.totalWords} words`;
+    $("vocab-summary").textContent = `|V| = ${res.rows.length} tokens (${res.keptCount} words + subwords + [UNK])`;
+  } else {
+    const res = applyBPEMergeCount(sliderVal);
+    cachedVocabRows = res.rows;
+    $("vocab-slider-value").textContent = `${sliderVal} / ${bpeMaxMerges} merges`;
+    $("vocab-summary").textContent = `|V| = ${res.rows.length} tokens (${bpeBaseVocab.length} chars + ${res.usedMerges.length} merges)`;
+    $("bpe-merges-tbody").innerHTML = res.usedMerges.length
+      ? res.usedMerges.map((m, i) => `<tr><td class="mono">${i + 1}</td><td class="mono">${escapeHtml(m.pair[0])} + ${escapeHtml(m.pair[1])}</td><td class="mono"><strong>${escapeHtml(m.merged)}</strong></td><td class="mono">${m.count}</td></tr>`).join("")
+      : `<tr><td colspan="4" style="color:var(--text-soft);text-align:center;">0 merges active (character-level mode)</td></tr>`;
+  }
+  renderVocabTable();
+  runTokenization();
+}
+
+function renderVocabTable() {
+  const q = $("vocab-search").value.trim().toLowerCase();
+  const filtered = q ? cachedVocabRows.filter(r => r.token.toLowerCase().includes(q) || String(r.id) === q) : cachedVocabRows;
+  $("vocab-tbody").innerHTML = filtered.map(r =>
+    `<tr><td class="mono">${r.id}</td><td class="mono"><strong>${escapeHtml(r.token)}</strong></td><td style="color:var(--text-muted);">${escapeHtml(r.meta)}</td></tr>`
+  ).join("");
+}
+
+function renderChipsHtml(tokens, clickable = false, selectedIdx = -1) {
+  return tokens.map((t, i) => `
+    <div class="chip ${clickable && i === selectedIdx ? "selected" : ""}" data-tok-idx="${i}"
+         style="background:${colorForId(t.id)}" title="${escapeHtml(t.reason || '')}">
+      <div class="t-txt">${escapeHtml(t.text)}</div>
+      <div class="t-id">id:${t.id}</div>
+      ${t.subword ? '<div class="t-tag">subword</div>' : ''}
+    </div>
+  `).join("");
+}
+
+function runTokenization() {
+  const text = $("encode-input").value;
+  const sliderVal = Number($("vocab-slider").value);
+  currentTokens = tokAlgo === "wordpiece" ? encodeWordPiece(text) : encodeBPE(text, sliderVal);
+
+  const charCount = text.length;
+  const tokCount = currentTokens.length;
+  const subwordCount = currentTokens.filter(t => t.subword).length;
+  const ratio = tokCount ? (charCount / tokCount).toFixed(2) : "0.00";
+
+  $("tok-metrics").innerHTML = `
+    <div class="metric-card"><div class="m-val">${charCount}</div><div class="m-lbl">Characters</div></div>
+    <div class="metric-card"><div class="m-val" style="color:var(--accent);">${tokCount}</div><div class="m-lbl">Tokens (L)</div></div>
+    <div class="metric-card"><div class="m-val" style="color:var(--teal);">${ratio}</div><div class="m-lbl">Chars / Token</div></div>
+    <div class="metric-card"><div class="m-val" style="color:var(--amber);">${subwordCount}</div><div class="m-lbl">Subword / UNK</div></div>
+  `;
+
+  $("tok-chips").innerHTML = renderChipsHtml(currentTokens);
+  $("tok-explain").innerHTML = subwordCount > 0
+    ? `<div class="hint-note"><strong>Subword Segmentation Active:</strong> ${subwordCount} piece(s) came from splitting words outside the active vocabulary. Hover any chip to inspect why it split.</div>`
+    : `<div class="hint-info">Every word in this sentence matched a single full token in the current vocabulary. Try dragging the slider left!</div>`;
+
+  const ids = currentTokens.map(t => t.id);
+  $("tok-ids-tensor").innerHTML = `<span class="f-label">input_ids = torch.tensor([ ... ])</span>[<span class="hl">${ids.join("</span>, <span class='hl'>")}</span>]`;
+
+  // Cascade downstream to Stage 2 & Stage 4
+  updateStage2Embeddings();
+  updateStage4Positional();
+}
+
+// ============================================================================
+// STAGE 2: SEMANTIC EMBEDDINGS (20D INTERPRETABLE SPACE) & VECTOR ARITHMETIC
+// ============================================================================
+const SEM_DIMS = [
+  "Animal", "Pet", "Feline", "Canine", "Reptile",
+  "Home", "Tech/Code", "Finance", "Nature", "Royalty",
+  "Male", "Female", "Youth", "Large", "Pos.",
+  "Neg.", "Action", "Food", "CS/Math", "Place"
+];
+
+// Curated 20D semantic prototypes (sparse definitions expanded to 20D arrays)
+const RAW_LEXICON = {
+  // Feline / Canine / Animals
+  cat:       { 0: 0.92, 1: 0.88, 2: 0.96, 5: 0.25 },
+  kitten:    { 0: 0.90, 1: 0.88, 2: 0.95, 5: 0.25, 12: 0.88 },
+  feline:    { 0: 0.90, 1: 0.65, 2: 0.98 },
+  tiger:     { 0: 0.95, 2: 0.88, 4: 0.40, 13: 0.85 },
+  lion:      { 0: 0.95, 2: 0.88, 4: 0.40, 9: 0.35, 13: 0.88 },
+  dog:       { 0: 0.92, 1: 0.90, 3: 0.96, 5: 0.25 },
+  dogs:      { 0: 0.92, 1: 0.90, 3: 0.96, 5: 0.25 },
+  puppy:     { 0: 0.90, 1: 0.90, 3: 0.95, 5: 0.25, 12: 0.88 },
+  wolf:      { 0: 0.94, 3: 0.85, 4: 0.45, 8: 0.35 },
+  pet:       { 0: 0.82, 1: 0.96, 5: 0.45 },
+  animal:    { 0: 0.96, 8: 0.25 },
+  bat:       { 0: 0.82, 4: 0.72, 8: 0.30, 16: 0.25 },
+  zebra:     { 0: 0.92, 4: 0.62, 8: 0.40, 13: 0.55 },
+  snake:     { 0: 0.88, 4: 0.98, 8: 0.35 },
+  snakes:    { 0: 0.88, 4: 0.98, 8: 0.35 },
+  cobra:     { 0: 0.88, 4: 0.98, 15: 0.30 },
+  lizard:    { 0: 0.84, 4: 0.94, 8: 0.30 },
+  reptile:   { 0: 0.86, 4: 0.98 },
+
+  // Home / Domestic / Posture
+  mat:       { 5: 0.94, 19: 0.30 },
+  rug:       { 5: 0.96, 19: 0.30 },
+  carpet:    { 5: 0.96, 19: 0.32 },
+  bed:       { 5: 0.92, 19: 0.35 },
+  sofa:      { 5: 0.90, 19: 0.30 },
+  house:     { 5: 0.88, 19: 0.72 },
+  home:      { 5: 0.94, 14: 0.35, 19: 0.60 },
+  sat:       { 5: 0.45, 16: 0.82 },
+  rested:    { 5: 0.52, 14: 0.25, 16: 0.78 },
+  sleeps:    { 5: 0.58, 16: 0.72 },
+  sleep:     { 5: 0.58, 16: 0.72 },
+  friends:   { 1: 0.45, 14: 0.88 },
+
+  // Tech / Programming / CS
+  python:      { 6: 0.95, 18: 0.68 },
+  pythons:     { 0: 0.85, 4: 0.96, 13: 0.55 },
+  programming: { 6: 0.98, 18: 0.72, 16: 0.25 },
+  coding:      { 6: 0.98, 18: 0.70, 16: 0.25 },
+  code:        { 6: 0.98, 18: 0.65 },
+  software:    { 6: 0.95, 18: 0.55 },
+  computer:    { 6: 0.94, 18: 0.68 },
+  algorithm:   { 6: 0.82, 18: 0.96 },
+  function:    { 6: 0.88, 18: 0.78 },
+  dictionary:  { 6: 0.86, 18: 0.72 },
+  neural:      { 6: 0.78, 18: 0.98 },
+  vector:      { 6: 0.60, 18: 0.98 },
+  matrix:      { 6: 0.62, 18: 0.98 },
+  token:       { 6: 0.76, 18: 0.94 },
+  llm:         { 6: 0.88, 18: 0.98 },
+  fast:        { 6: 0.25, 14: 0.45, 16: 0.72 },
+
+  // Finance / Economics
+  stock:     { 7: 0.98, 18: 0.20 },
+  stocks:    { 7: 0.98, 18: 0.20 },
+  market:    { 7: 0.96, 19: 0.25 },
+  share:     { 7: 0.96 },
+  shares:    { 7: 0.96 },
+  price:     { 7: 0.94 },
+  prices:    { 7: 0.94 },
+  money:     { 7: 0.95 },
+  economy:   { 7: 0.95 },
+  bank:      { 7: 0.92, 19: 0.45 },
+  invest:    { 7: 0.94, 16: 0.35 },
+  trade:     { 7: 0.92, 16: 0.40 },
+  crashed:   { 7: 0.68, 15: 0.94, 16: 0.65 },
+  fell:      { 7: 0.55, 15: 0.86, 16: 0.72 },
+  sharply:   { 7: 0.42, 15: 0.78 },
+  today:     { 7: 0.25, 19: 0.15 },
+
+  // Nature / Weather / Places
+  sun:       { 8: 0.96, 14: 0.55 },
+  sunny:     { 8: 0.95, 14: 0.68 },
+  rain:      { 8: 0.95, 15: 0.35 },
+  river:     { 8: 0.96, 19: 0.78 },
+  water:     { 8: 0.94 },
+  flooded:   { 8: 0.88, 15: 0.65, 19: 0.40 },
+  street:    { 19: 0.95 },
+  city:      { 19: 0.96, 13: 0.45 },
+  forest:    { 8: 0.94, 19: 0.75 },
+  mountain:  { 8: 0.92, 13: 0.78, 19: 0.75 },
+
+  // Royalty & Gender (for exact clean vector arithmetic!)
+  king:      { 9: 0.95, 10: 0.92, 13: 0.25 },
+  queen:     { 9: 0.95, 11: 0.92, 13: 0.25 },
+  prince:    { 9: 0.90, 10: 0.90, 12: 0.85 },
+  princess:  { 9: 0.90, 11: 0.90, 12: 0.85 },
+  man:       { 10: 0.96 },
+  woman:     { 11: 0.96 },
+  boy:       { 10: 0.92, 12: 0.90 },
+  girl:      { 11: 0.92, 12: 0.90 },
+  father:    { 5: 0.45, 10: 0.94 },
+  mother:    { 5: 0.45, 11: 0.94 },
+  royal:     { 9: 0.98 },
+
+  // Emotions / Modifiers / Actions
+  love:      { 14: 0.98, 16: 0.35 },
+  like:      { 14: 0.88, 16: 0.30 },
+  liked:     { 14: 0.88, 16: 0.35 },
+  passion:   { 14: 0.95, 6: 0.25 },
+  happy:     { 14: 0.96 },
+  tired:     { 15: 0.75, 0: 0.25 },
+  large:     { 13: 0.96 },
+  big:       { 13: 0.95 },
+  small:     { 12: 0.88, 13: -0.75 },
+  cross:     { 16: 0.88, 19: 0.35 },
+  saw:       { 16: 0.80 },
+  apple:     { 17: 0.96, 8: 0.35 },
+  pizza:     { 17: 0.98, 14: 0.40 },
+  coffee:    { 17: 0.92, 6: 0.25 }
+};
+
+function expandSparse(obj) {
+  const v = new Array(20).fill(0);
+  for (const [k, val] of Object.entries(obj)) v[Number(k)] = val;
+  return v;
+}
+
+function getWordEmbedding(rawWord, contextWords = []) {
+  const w = rawWord.toLowerCase().replace(/^##|▁$/g, "");
+  // Contextual disambiguation for polysemy demos
+  const ctx = new Set(contextWords.map(x => x.toLowerCase()));
+  if (w === "python" || w === "pythons") {
+    if (ctx.has("snake") || ctx.has("snakes") || ctx.has("reptile") || ctx.has("large") || ctx.has("jungle")) {
+      return normalize(expandSparse({ 0: 0.88, 4: 0.98, 13: 0.55, 8: 0.30 }));
+    }
+    return normalize(expandSparse({ 6: 0.96, 18: 0.72 }));
+  }
+  if (w === "bank" && (ctx.has("river") || ctx.has("water") || ctx.has("flooded") || ctx.has("shore"))) {
+    return normalize(expandSparse({ 8: 0.92, 19: 0.85 }));
+  }
+
+  if (w in RAW_LEXICON) {
+    return normalize(expandSparse(RAW_LEXICON[w]));
+  }
+  // Stem fallback (plurals / -ed / -ing / -y)
+  const stems = [w.replace(/s$/, ""), w.replace(/ed$/, ""), w.replace(/ing$/, ""), w.replace(/ny$/, "")];
+  for (const st of stems) {
+    if (st.length >= 3 && st in RAW_LEXICON) {
+      return normalize(expandSparse(RAW_LEXICON[st]));
+    }
+  }
+
+  // Deterministic pseudo-embedding for any OOV / punctuation / function token
+  const v = new Array(20).fill(0);
+  const h = hashString(w || "unk");
+  for (let i = 0; i < 20; i++) {
+    const s = Math.sin((h + i * 2654435761) * 0.0001);
+    v[i] = s * 0.35;
+  }
+  if (/^(the|a|an|in|on|of|to|is|are|was|were|and|but|my|i|you|do|don|t|by|it|because|too)$/.test(w)) {
+    // Low-magnitude function word signature
+    for (let i = 0; i < 20; i++) v[i] *= 0.25;
+  }
+  return normalize(v);
+}
+
+let selectedEmbIdx = 0;
+function updateStage2Embeddings() {
+  if (!currentTokens.length) return;
+  if (selectedEmbIdx >= currentTokens.length) selectedEmbIdx = 0;
+
+  $("emb-token-chips").innerHTML = renderChipsHtml(currentTokens, true, selectedEmbIdx);
+  $("emb-token-chips").querySelectorAll(".chip").forEach(el => {
+    el.addEventListener("click", () => {
+      selectedEmbIdx = Number(el.dataset.tokIdx);
+      updateStage2Embeddings();
+    });
+  });
+
+  const tok = currentTokens[selectedEmbIdx];
+  const ctxWords = splitIntoWords($("encode-input").value);
+  const vec = getWordEmbedding(tok.text, ctxWords);
+
+  $("emb-inspector-header").innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;">
+      <div>
+        <span style="font-size:12px;color:var(--text-soft);">Selected Row:</span>
+        <strong class="mono" style="font-size:15px;color:var(--accent);margin-left:4px;">E[${tok.id}]</strong>
+        <span style="margin:0 6px;color:var(--text-soft);">→</span>
+        <span class="mono" style="font-weight:700;">"${escapeHtml(tok.text)}"</span>
+      </div>
+      <div class="mono" style="font-size:12px;color:var(--text-muted);">
+        dim = 20 · ‖v‖₂ = ${norm(vec).toFixed(3)}
+      </div>
+    </div>
+  `;
+
+  $("emb-vec-heatmap").innerHTML = vec.map((val, idx) => {
+    const bg = val >= 0
+      ? `rgba(79, 70, 229, ${Math.min(0.85, Math.abs(val) * 1.15 + 0.06)})`
+      : `rgba(225, 29, 72, ${Math.min(0.85, Math.abs(val) * 1.15 + 0.06)})`;
+    const fg = Math.abs(val) > 0.42 ? "#ffffff" : "var(--text)";
+    return `
+      <div class="vec-cell" style="background:${bg};color:${fg};" title="Dim ${idx} (${SEM_DIMS[idx]}): ${val.toFixed(4)}">
+        <div class="vc-dim">${SEM_DIMS[idx]}</div>
+        <div class="vc-val">${val >= 0 ? "+" : ""}${val.toFixed(2)}</div>
+      </div>
+    `;
+  }).join("");
+
+  $("emb-raw-vec").innerHTML = `<span class="f-label">Float32 Tensor (20D unit-normalized)</span>[${vec.map(x => (x >= 0 ? " " : "") + x.toFixed(3)).join(", ")}]`;
+}
+
+// Vector Arithmetic Playground
+const ARITH_WORDS = ["king", "queen", "man", "woman", "prince", "princess", "boy", "girl", "father", "mother", "dog", "puppy", "cat", "kitten", "tiger", "python", "snake", "stock", "river"];
+function initVectorArithmetic() {
+  const opts = ARITH_WORDS.map(w => `<option value="${w}">${w}</option>`).join("");
+  $("arith-a").innerHTML = opts;
+  $("arith-b").innerHTML = opts;
+  $("arith-c").innerHTML = opts;
+  $("arith-a").value = "king";
+  $("arith-b").value = "man";
+  $("arith-c").value = "woman";
+
+  ["arith-a", "arith-b", "arith-c"].forEach(id => $(id).addEventListener("change", runVectorArithmetic));
+  document.querySelectorAll("[data-analogy]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const [a, b, c] = btn.dataset.analogy.split(",");
+      $("arith-a").value = a; $("arith-b").value = b; $("arith-c").value = c;
+      runVectorArithmetic();
+    });
+  });
+  runVectorArithmetic();
+}
+
+function runVectorArithmetic() {
+  const a = $("arith-a").value, b = $("arith-b").value, c = $("arith-c").value;
+  const va = expandSparse(RAW_LEXICON[a]);
+  const vb = expandSparse(RAW_LEXICON[b]);
+  const vc = expandSparse(RAW_LEXICON[c]);
+  const target = normalize(va.map((x, i) => x - vb[i] + vc[i]));
+
+  const ranked = ARITH_WORDS
+    .filter(w => w !== a && w !== b && w !== c)
+    .map(w => ({ word: w, score: cosineSim(target, normalize(expandSparse(RAW_LEXICON[w]))) }))
+    .sort((x, y) => y.score - x.score)
+    .slice(0, 4);
+
+  const top = ranked[0];
+  $("arith-result").innerHTML = `
+    <div class="formula-box" style="margin-bottom:10px;font-size:13px;">
+      <span class="hl">vec("${a}")</span> − <span class="hl-amber">vec("${b}")</span> + <span class="hl-teal">vec("${c}")</span> ≈ <strong style="color:#34d399;font-size:15px;">"${top.word}"</strong>  (cos = ${top.score.toFixed(3)})
+    </div>
+    <div class="table-wrap" style="max-height:160px;">
+      <table>
+        <thead><tr><th>Rank</th><th>Nearest Word</th><th>Cosine Similarity</th></tr></thead>
+        <tbody>
+          ${ranked.map((r, i) => `
+            <tr style="${i === 0 ? 'background:var(--emerald-soft);font-weight:700;' : ''}">
+              <td class="mono">#${i + 1}</td>
+              <td class="mono">${r.word}</td>
+              <td class="mono">${r.score.toFixed(3)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ============================================================================
+// STAGE 3A: INTERACTIVE 2D COSINE SIMILARITY SANDBOX
+// ============================================================================
+const c2dState = {
+  angleA: -Math.PI / 6,   // 30 deg above x-axis (canvas y is inverted)
+  angleB: -Math.PI / 3,   // 60 deg above x-axis
+  magA: 1.6,
+  magB: 1.3,
+  dragging: null
+};
+
+function drawCosine2D() {
+  const canvas = $("cosine-2d-canvas");
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width || 560;
+  const H = 310;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.height = H + "px";
+  ctx.scale(dpr, dpr);
+
+  const cx = W / 2, cy = H / 2 + 10;
+  const scale = Math.min(W, H) * 0.18;
+
+  ctx.fillStyle = cssVar("--canvas-bg");
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle grid
+  ctx.strokeStyle = cssVar("--canvas-grid");
+  ctx.lineWidth = 1;
+  for (let gx = -5; gx <= 5; gx++) {
+    ctx.beginPath(); ctx.moveTo(cx + gx * scale, 0); ctx.lineTo(cx + gx * scale, H); ctx.stroke();
+  }
+  for (let gy = -4; gy <= 4; gy++) {
+    ctx.beginPath(); ctx.moveTo(0, cy + gy * scale); ctx.lineTo(W, cy + gy * scale); ctx.stroke();
+  }
+
+  // Unit circle dashed
+  ctx.save();
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = cssVar("--canvas-axis");
+  ctx.beginPath(); ctx.arc(cx, cy, scale, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+
+  // Axes
+  ctx.strokeStyle = cssVar("--canvas-axis");
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+
+  const ax = Math.cos(c2dState.angleA) * c2dState.magA;
+  const ay = -Math.sin(c2dState.angleA) * c2dState.magA; // mathematical y up
+  const bx = Math.cos(c2dState.angleB) * c2dState.magB;
+  const by = -Math.sin(c2dState.angleB) * c2dState.magB;
+
+  const pAx = cx + ax * scale, pAy = cy - ay * scale;
+  const pBx = cx + bx * scale, pBy = cy - by * scale;
+
+  // Angle arc
+  let diff = c2dState.angleB - c2dState.angleA;
+  while (diff > Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+  ctx.save();
+  ctx.fillStyle = "rgba(79, 70, 229, 0.14)";
+  ctx.strokeStyle = "#4f46e5";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, 42, c2dState.angleA, c2dState.angleA + diff, diff < 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // Euclidean dashed connector
+  ctx.save();
+  ctx.setLineDash([5, 4]);
+  ctx.strokeStyle = "#d97706";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(pAx, pAy); ctx.lineTo(pBx, pBy); ctx.stroke();
+  ctx.restore();
+
+  function drawArrow(x1, y1, x2, y2, color, label) {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+
+    const ang = Math.atan2(y2 - y1, x2 - x1);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - 12 * Math.cos(ang - 0.35), y2 - 12 * Math.sin(ang - 0.35));
+    ctx.lineTo(x2 - 12 * Math.cos(ang + 0.35), y2 - 12 * Math.sin(ang + 0.35));
+    ctx.closePath();
+    ctx.fill();
+
+    // Drag handle ring
+    ctx.beginPath();
+    ctx.arc(x2, y2, 9, 0, Math.PI * 2);
+    ctx.fillStyle = color + "33";
+    ctx.fill();
+
+    ctx.font = "700 13px 'JetBrains Mono', monospace";
+    ctx.fillStyle = color;
+    ctx.fillText(label, x2 + 12, y2 - 6);
+  }
+
+  drawArrow(cx, cy, pAx, pAy, "#4f46e5", `A (${ax.toFixed(1)}, ${ay.toFixed(1)})`);
+  drawArrow(cx, cy, pBx, pBy, "#0d9488", `B (${bx.toFixed(1)}, ${by.toFixed(1)})`);
+
+  // Compute live metrics
+  const dp = ax * bx + ay * by;
+  const cos = dp / (c2dState.magA * c2dState.magB);
+  const clampedCos = Math.max(-1, Math.min(1, cos));
+  const deg = Math.acos(clampedCos) * (180 / Math.PI);
+  const l2 = Math.hypot(ax - bx, ay - by);
+
+  $("c2d-cos").textContent = clampedCos.toFixed(3);
+  $("c2d-deg").textContent = deg.toFixed(1) + "°";
+  $("c2d-dot").textContent = dp.toFixed(2);
+  $("c2d-l2").textContent = l2.toFixed(2);
+  $("c2d-maga-val").textContent = c2dState.magA.toFixed(2);
+  $("c2d-magb-val").textContent = c2dState.magB.toFixed(2);
+
+  // Store screen coords for hit testing
+  c2dState._screen = { cx, cy, scale, pAx, pAy, pBx, pBy };
+}
+
+function initCosine2D() {
+  const canvas = $("cosine-2d-canvas");
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - r.left, y: clientY - r.top };
+  };
+  const onDown = (e) => {
+    const p = getPos(e);
+    const s = c2dState._screen;
+    if (!s) return;
+    if (Math.hypot(p.x - s.pAx, p.y - s.pAy) < 22) c2dState.dragging = "A";
+    else if (Math.hypot(p.x - s.pBx, p.y - s.pBy) < 22) c2dState.dragging = "B";
+  };
+  const onMove = (e) => {
+    if (!c2dState.dragging) return;
+    e.preventDefault();
+    const p = getPos(e);
+    const s = c2dState._screen;
+    const dx = p.x - s.cx, dy = p.y - s.cy;
+    const ang = Math.atan2(dy, dx);
+    const mag = Math.max(0.4, Math.min(2.4, Math.hypot(dx, dy) / s.scale));
+    if (c2dState.dragging === "A") {
+      c2dState.angleA = ang; c2dState.magA = mag; $("c2d-maga").value = mag.toFixed(2);
+    } else {
+      c2dState.angleB = ang; c2dState.magB = mag; $("c2d-magb").value = mag.toFixed(2);
+    }
+    drawCosine2D();
+  };
+  const onUp = () => { c2dState.dragging = null; };
+
+  canvas.addEventListener("mousedown", onDown);
+  window.addEventListener("mousemove", onMove);
+  window.addEventListener("mouseup", onUp);
+  canvas.addEventListener("touchstart", onDown, { passive: false });
+  window.addEventListener("touchmove", onMove, { passive: false });
+  window.addEventListener("touchend", onUp);
+
+  $("c2d-maga").addEventListener("input", e => { c2dState.magA = Number(e.target.value); drawCosine2D(); });
+  $("c2d-magb").addEventListener("input", e => { c2dState.magB = Number(e.target.value); drawCosine2D(); });
+  document.querySelectorAll("[data-c2d]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const m = btn.dataset.c2d;
+      if (m === "aligned") { c2dState.angleA = -Math.PI / 5; c2dState.angleB = -Math.PI / 5; }
+      if (m === "ortho")   { c2dState.angleA = 0; c2dState.angleB = -Math.PI / 2; }
+      if (m === "opposite"){ c2dState.angleA = -Math.PI / 6; c2dState.angleB = 5 * Math.PI / 6; }
+      drawCosine2D();
+    });
+  });
+}
+
+// ============================================================================
+// STAGE 3B: SENTENCE EMBEDDINGS, PCA TO 3D & ZERO-DEPENDENCY 3D VIEWPORT
+// ============================================================================
+let embedMode = "semantic"; // 'semantic' | 'lexical'
+let customUserSentence = null;
+let pcaScene = {
+  points: [],
+  sentences: [],
+  vectors: [],
+  variances: [0, 0, 0],
+  yaw: 0.65,
+  pitch: 0.38,
+  zoom: 1.0,
+  showRays: true,
+  dragging: false,
+  lastX: 0,
+  lastY: 0,
+  projected2D: []
+};
+
+// Mode 1: Semantic 20D Sentence Embedding (weighted average of content word vectors)
+const STOPWORDS = new Set(["the", "a", "an", "on", "in", "is", "are", "was", "were", "to", "of", "and", "or", "my", "i", "it", "this", "that", "for", "with", "at", "by", ".", ",", "!", "?"]);
+function sentenceSemanticVector(sentence) {
+  const words = splitIntoWords(sentence);
+  const sum = new Array(20).fill(0);
+  let totalWeight = 0;
+  for (const w of words) {
+    if (/^[.,!?;:'"()\-]+$/.test(w)) continue;
+    const weight = STOPWORDS.has(w) ? 0.08 : 1.0;
+    const v = getWordEmbedding(w, words);
+    for (let i = 0; i < 20; i++) sum[i] += v[i] * weight;
+    totalWeight += weight;
+  }
+  return normalize(totalWeight > 0 ? sum : new Array(20).fill(0.1));
+}
+
+// Mode 2: Exact Spelling Trigram Hashing (64D — same algorithm as reference site!)
+function sentenceLexicalVector(sentence) {
+  const s = sentence.toLowerCase();
+  const v = new Array(64).fill(0);
+  for (let i = 0; i + 3 <= s.length; i++) {
+    const tri = s.slice(i, i + 3);
+    v[hashString(tri) % 64] += 1;
+  }
+  return normalize(v);
+}
+
+// Exact PCA via centered covariance matrix + power iteration with Hotelling deflation
+function pcaTo3D(vectors) {
+  const n = vectors.length, d = vectors[0].length;
+  const mean = new Array(d).fill(0);
+  for (const v of vectors) for (let j = 0; j < d; j++) mean[j] += v[j] / n;
+  const X = vectors.map(v => v.map((x, j) => x - mean[j]));
+
+  const C = Array.from({ length: d }, () => new Array(d).fill(0));
+  for (let a = 0; a < d; a++) {
+    for (let b = a; b < d; b++) {
+      let s = 0;
+      for (let i = 0; i < n; i++) s += X[i][a] * X[i][b];
+      s /= Math.max(1, n - 1);
+      C[a][b] = s;
+      C[b][a] = s;
+    }
+  }
+  let totalVar = 0;
+  for (let a = 0; a < d; a++) totalVar += C[a][a];
+
+  const components = [];
+  const lambdas = [];
+  for (let k = 0; k < 3; k++) {
+    let v = normalize(Array.from({ length: d }, (_, j) => Math.sin((j + 1) * (k + 1.37) + k * 2.1)));
+    for (let iter = 0; iter < 60; iter++) {
+      const next = C.map(row => dot(row, v));
+      const nrm = norm(next);
+      if (nrm < 1e-10) break;
+      v = next.map(x => x / nrm);
+    }
+    const Cv = C.map(row => dot(row, v));
+    const lambda = Math.max(0, dot(v, Cv));
+    components.push(v);
+    lambdas.push(lambda);
+    for (let a = 0; a < d; a++)
+      for (let b = 0; b < d; b++) C[a][b] -= lambda * v[a] * v[b];
+  }
+
+  const coords = X.map(x => components.map(c => dot(x, c)));
+  // Normalize 3D coords to [-1, 1] bounding sphere for clean viewport framing
+  let maxR = 0.001;
+  for (const p of coords) maxR = Math.max(maxR, Math.hypot(p[0], p[1], p[2]));
+  const scaled = coords.map(p => p.map(c => c / maxR));
+  const variances = lambdas.map(l => totalVar > 0 ? (l / totalVar) * 100 : 0);
+  return { points: scaled, variances };
+}
+
+function clusterColorForSentence(s) {
+  if (s === customUserSentence) return "#f97316";
+  const low = s.toLowerCase();
+  if (/(python|coding|program|code|algorithm|neural)/.test(low) && !/snake/.test(low)) return "#0d9488";
+  if (/(stock|share|price|market|bank|econom)/.test(low)) return "#e11d48";
+  if (/(snake|bat|zebra|reptile)/.test(low)) return "#8b5cf6";
+  return "#4f46e5";
+}
+
+function drawPCA3D() {
+  const canvas = $("pca-3d-canvas");
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width || 660;
+  const H = 460;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.height = H + "px";
+  ctx.scale(dpr, dpr);
+
+  ctx.fillStyle = cssVar("--canvas-bg");
+  ctx.fillRect(0, 0, W, H);
+
+  const cx = W / 2, cy = H / 2 + 12;
+  const scale = Math.min(W, H) * 0.34 * pcaScene.zoom;
+  const cosY = Math.cos(pcaScene.yaw), sinY = Math.sin(pcaScene.yaw);
+  const cosP = Math.cos(pcaScene.pitch), sinP = Math.sin(pcaScene.pitch);
+
+  function project([x, y, z]) {
+    // Rotate around Y (yaw), then X (pitch)
+    const x1 = x * cosY - z * sinY;
+    const z1 = x * sinY + z * cosY;
+    const y2 = y * cosP - z1 * sinP;
+    const z2 = y * sinP + z1 * cosP;
+    const persp = 3.2 / (3.2 - z2 * 0.85);
+    return { sx: cx + x1 * scale * persp, sy: cy - y2 * scale * persp, depth: z2, persp };
+  }
+
+  // Draw subtle 3D cube wireframe & floor grid
+  ctx.strokeStyle = cssVar("--canvas-grid");
+  ctx.lineWidth = 1;
+  for (let g = -1; g <= 1; g += 0.5) {
+    const a = project([g, -1, -1]), b = project([g, -1, 1]);
+    ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy); ctx.stroke();
+    const c = project([-1, -1, g]), d = project([1, -1, g]);
+    ctx.beginPath(); ctx.moveTo(c.sx, c.sy); ctx.lineTo(d.sx, d.sy); ctx.stroke();
+  }
+
+  // Draw PC1, PC2, PC3 axes
+  const orig = project([0, 0, 0]);
+  const axes = [
+    { pt: [1.22, 0, 0], label: "PC1", color: "#4f46e5" },
+    { pt: [0, 1.22, 0], label: "PC2", color: "#0d9488" },
+    { pt: [0, 0, 1.22], label: "PC3", color: "#d97706" }
+  ];
+  axes.forEach(ax => {
+    const neg = project(ax.pt.map(v => -v * 0.9));
+    const pos = project(ax.pt);
+    ctx.strokeStyle = ax.color + "88";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(neg.sx, neg.sy); ctx.lineTo(pos.sx, pos.sy); ctx.stroke();
+    ctx.font = "700 11.5px 'JetBrains Mono', monospace";
+    ctx.fillStyle = ax.color;
+    ctx.fillText(ax.label, pos.sx + 5, pos.sy + 4);
+  });
+
+  // If custom sentence exists, draw dashed lines to its 3 nearest neighbors
+  if (customUserSentence && pcaScene.sentences.includes(customUserSentence)) {
+    const uIdx = pcaScene.sentences.indexOf(customUserSentence);
+    const uVec = pcaScene.vectors[uIdx];
+    const nbrs = pcaScene.vectors
+      .map((v, i) => ({ i, sim: cosineSim(uVec, v) }))
+      .filter(o => o.i !== uIdx)
+      .sort((a, b) => b.sim - a.sim)
+      .slice(0, 3);
+    const uProj = project(pcaScene.points[uIdx]);
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = "#f97316aa";
+    ctx.lineWidth = 1.6;
+    nbrs.forEach(n => {
+      const np = project(pcaScene.points[n.i]);
+      ctx.beginPath(); ctx.moveTo(uProj.sx, uProj.sy); ctx.lineTo(np.sx, np.sy); ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  // Sort points back-to-front by depth for proper painter's occlusion
+  const items = pcaScene.points.map((pt, i) => ({
+    i,
+    sentence: pcaScene.sentences[i],
+    proj: project(pt),
+    color: clusterColorForSentence(pcaScene.sentences[i]),
+    isUser: pcaScene.sentences[i] === customUserSentence
+  })).sort((a, b) => a.proj.depth - b.proj.depth);
+
+  pcaScene.projected2D = items;
+
+  items.forEach(item => {
+    const { sx, sy, persp } = item.proj;
+    if (pcaScene.showRays) {
+      ctx.strokeStyle = item.color + "38";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(orig.sx, orig.sy); ctx.lineTo(sx, sy); ctx.stroke();
+    }
+
+    const r = (item.isUser ? 9.5 : 6.2) * Math.max(0.75, persp * 0.9);
+    ctx.beginPath();
+    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+    ctx.fillStyle = item.color;
+    ctx.fill();
+    ctx.lineWidth = item.isUser ? 2.5 : 1.5;
+    ctx.strokeStyle = "#ffffff";
+    ctx.stroke();
+
+    const shortLbl = item.sentence.length > 26 ? item.sentence.slice(0, 25) + "…" : item.sentence;
+    ctx.font = `${item.isUser ? "700" : "500"} 11.5px 'Inter', system-ui, sans-serif`;
+    ctx.fillStyle = cssVar("--canvas-text");
+    ctx.fillText(shortLbl, sx + r + 5, sy + 4);
+  });
+}
+
+function runEmbedAndPlot3D() {
+  const status = $("embed-status");
+  status.textContent = "";
+  const sentences = $("sentences-input").value.split("\n").map(s => s.trim()).filter(Boolean);
+  if (sentences.length < 4) {
+    status.textContent = "Please enter at least 4 sentences for 3D PCA.";
+    return;
+  }
+
+  const vectors = sentences.map(s => embedMode === "semantic" ? sentenceSemanticVector(s) : sentenceLexicalVector(s));
+  const { points, variances } = pcaTo3D(vectors);
+
+  pcaScene.sentences = sentences;
+  pcaScene.vectors = vectors;
+  pcaScene.points = points;
+  pcaScene.variances = variances;
+
+  const total3 = variances[0] + variances[1] + variances[2];
+  $("pca-var-hud").textContent = `PCA Explained: PC1 ${variances[0].toFixed(0)}% · PC2 ${variances[1].toFixed(0)}% · PC3 ${variances[2].toFixed(0)}% (Total ${Math.min(100, total3).toFixed(0)}%)`;
+
+  drawPCA3D();
+  renderClosestPairs(vectors, sentences);
+  renderSimilarityMatrix(vectors, sentences);
+  if (customUserSentence && sentences.includes(customUserSentence)) {
+    renderCustomWordTrace(vectors, sentences);
+  }
+}
+
+function renderClosestPairs(vectors, sentences) {
+  const pairs = [];
+  for (let i = 0; i < vectors.length; i++)
+    for (let j = i + 1; j < vectors.length; j++)
+      pairs.push({ a: sentences[i], b: sentences[j], score: cosineSim(vectors[i], vectors[j]) });
+  pairs.sort((p, q) => q.score - p.score);
+
+  $("closest-pairs-tbody").innerHTML = pairs.slice(0, 5).map(p => `
+    <tr>
+      <td>${escapeHtml(p.a)}</td>
+      <td>${escapeHtml(p.b)}</td>
+      <td class="mono" style="font-weight:700;color:${p.score > 0.65 ? 'var(--emerald)' : 'var(--accent)'};">${p.score.toFixed(3)}</td>
+    </tr>
+  `).join("");
+}
+
+function renderSimilarityMatrix(vectors, sentences) {
+  let html = `<table><thead><tr><th>#</th>${sentences.map((_, i) => `<th>S${i + 1}</th>`).join("")}</tr></thead><tbody>`;
+  for (let i = 0; i < sentences.length; i++) {
+    html += `<tr><td class="row-hdr" title="${escapeHtml(sentences[i])}">S${i + 1}: ${escapeHtml(sentences[i])}</td>`;
+    for (let j = 0; j < sentences.length; j++) {
+      const sim = cosineSim(vectors[i], vectors[j]);
+      const alpha = Math.max(0.05, Math.min(0.85, sim * 0.85));
+      const bg = i === j ? "var(--bg-subtle)" : `rgba(79, 70, 229, ${alpha})`;
+      const fg = i !== j && sim > 0.55 ? "#fff" : "var(--text)";
+      html += `<td style="background:${bg};color:${fg};" title="cos(S${i + 1}, S${j + 1}) = ${sim.toFixed(3)}">${sim.toFixed(2)}</td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody></table>`;
+  $("sim-matrix-wrap").innerHTML = html;
+}
+
+function renderCustomWordTrace(vectors, sentences) {
+  const idx = sentences.indexOf(customUserSentence);
+  if (idx === -1) return;
+  const v = vectors[idx];
+  const toks = tokAlgo === "wordpiece" ? encodeWordPiece(customUserSentence) : encodeBPE(customUserSentence, Number($("vocab-slider").value));
+  const nbrs = sentences
+    .map((s, i) => ({ s, score: cosineSim(v, vectors[i]) }))
+    .filter((_, i) => i !== idx)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+  $("custom-word-trace").innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px;">Step 1 — Tokenized (${toks.length} tokens):</div>
+    <div class="chips" style="margin-top:0;margin-bottom:8px;">${renderChipsHtml(toks)}</div>
+    <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:4px;">Step 2 — Vector preview (first 6 of ${v.length} dims):</div>
+    <code class="mono" style="font-size:11.5px;display:block;padding:6px 8px;background:var(--bg-subtle);border-radius:6px;margin-bottom:8px;">[${v.slice(0, 6).map(x => x.toFixed(3)).join(", ")}, …]</code>
+    <div style="font-size:12px;font-weight:700;color:#ea580c;margin-bottom:4px;">Step 3 — Orange Point in 3D · Nearest Neighbors:</div>
+    <table style="font-size:12px;">
+      <tbody>
+        ${nbrs.map(n => `<tr><td>${escapeHtml(n.s)}</td><td class="mono" style="font-weight:700;">${n.score.toFixed(3)}</td></tr>`).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function initPCA3DInteractions() {
+  const canvas = $("pca-3d-canvas");
+  const tooltip = $("pca-tooltip");
+
+  canvas.addEventListener("mousedown", e => {
+    pcaScene.dragging = true;
+    pcaScene.lastX = e.clientX;
+    pcaScene.lastY = e.clientY;
+  });
+  window.addEventListener("mousemove", e => {
+    if (pcaScene.dragging) {
+      pcaScene.yaw += (e.clientX - pcaScene.lastX) * 0.008;
+      pcaScene.pitch = Math.max(-1.4, Math.min(1.4, pcaScene.pitch + (e.clientY - pcaScene.lastY) * 0.008));
+      pcaScene.lastX = e.clientX;
+      pcaScene.lastY = e.clientY;
+      drawPCA3D();
+    }
+  });
+  window.addEventListener("mouseup", () => { pcaScene.dragging = false; });
+
+  canvas.addEventListener("wheel", e => {
+    e.preventDefault();
+    pcaScene.zoom = Math.max(0.55, Math.min(2.2, pcaScene.zoom - e.deltaY * 0.001));
+    drawPCA3D();
+  }, { passive: false });
+
+  canvas.addEventListener("mousemove", e => {
+    if (pcaScene.dragging) { tooltip.style.display = "none"; return; }
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    let hit = null;
+    for (let i = pcaScene.projected2D.length - 1; i >= 0; i--) {
+      const it = pcaScene.projected2D[i];
+      if (Math.hypot(mx - it.proj.sx, my - it.proj.sy) < 14) { hit = it; break; }
+    }
+    if (hit) {
+      const p = pcaScene.points[hit.i];
+      tooltip.style.display = "block";
+      tooltip.style.left = Math.min(rect.width - 230, mx + 14) + "px";
+      tooltip.style.top = Math.max(8, my - 10) + "px";
+      tooltip.innerHTML = `<strong>${escapeHtml(hit.sentence)}</strong><br><span style="color:#94a3b8;font-family:monospace;">PC: (${p[0].toFixed(2)}, ${p[1].toFixed(2)}, ${p[2].toFixed(2)})</span>`;
+    } else {
+      tooltip.style.display = "none";
+    }
+  });
+  canvas.addEventListener("mouseleave", () => { tooltip.style.display = "none"; });
+
+  $("pca-reset-cam").addEventListener("click", () => {
+    pcaScene.yaw = 0.65; pcaScene.pitch = 0.38; pcaScene.zoom = 1.0;
+    drawPCA3D();
+  });
+  $("pca-rays-toggle").addEventListener("click", () => {
+    pcaScene.showRays = !pcaScene.showRays;
+    $("pca-rays-toggle").textContent = `Origin Rays: ${pcaScene.showRays ? "ON" : "OFF"}`;
+    drawPCA3D();
+  });
+}
+
+// ============================================================================
+// STAGE 4: POSITIONAL ENCODING (SINUSOIDAL MATRIX & WAVEFORMS)
+// ============================================================================
+const PE_D = 16;
+function computePE(pos, d = PE_D) {
+  const v = new Array(d);
+  for (let i = 0; i < d; i++) {
+    const dimPair = Math.floor(i / 2);
+    const angle = pos / Math.pow(10000, (2 * dimPair) / d);
+    v[i] = i % 2 === 0 ? Math.sin(angle) : Math.cos(angle);
+  }
+  return v;
+}
+
+function updateStage4Positional() {
+  const numPos = Math.max(8, Math.min(16, currentTokens.length + 2));
+  const p1Slider = $("pe-p1"), p2Slider = $("pe-p2");
+  p1Slider.max = numPos - 1;
+  p2Slider.max = numPos - 1;
+  if (Number(p1Slider.value) >= numPos) p1Slider.value = 1;
+  if (Number(p2Slider.value) >= numPos) p2Slider.value = Math.min(numPos - 1, 4);
+
+  const p1 = Number(p1Slider.value), p2 = Number(p2Slider.value);
+  const tokLabel = (p) => currentTokens[p] ? `pos ${p} ("${currentTokens[p].text}")` : `pos ${p}`;
+  $("pe-p1-val").textContent = tokLabel(p1);
+  $("pe-p2-val").textContent = tokLabel(p2);
+  $("pe-dist-val").textContent = Math.abs(p1 - p2);
+  $("pe-cos-val").textContent = cosineSim(computePE(p1), computePE(p2)).toFixed(3);
+
+  drawPEHeatmap(numPos, p1, p2);
+  drawPEWaves(numPos, p1, p2);
+}
+
+function drawPEHeatmap(numPos, p1, p2) {
+  const canvas = $("pe-heatmap-canvas");
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width || 540, H = 270;
+  canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.height = H + "px";
+  ctx.scale(dpr, dpr);
+
+  ctx.fillStyle = cssVar("--canvas-bg");
+  ctx.fillRect(0, 0, W, H);
+
+  const padL = 78, padT = 26, padR = 14, padB = 18;
+  const cellW = (W - padL - padR) / PE_D;
+  const cellH = (H - padT - padB) / numPos;
+
+  ctx.font = "600 10px 'JetBrains Mono', monospace";
+  ctx.fillStyle = cssVar("--text-muted");
+  for (let d = 0; d < PE_D; d += 2) {
+    ctx.fillText(`d${d}`, padL + d * cellW + 2, 16);
+  }
+
+  for (let pos = 0; pos < numPos; pos++) {
+    const vec = computePE(pos);
+    const y = padT + pos * cellH;
+    const tokTxt = currentTokens[pos] ? `${pos}:${currentTokens[pos].text.slice(0, 7)}` : `pos ${pos}`;
+    ctx.fillStyle = (pos === p1 || pos === p2) ? cssVar("--accent") : cssVar("--canvas-text");
+    ctx.font = (pos === p1 || pos === p2) ? "700 10.5px 'JetBrains Mono', monospace" : "500 10px 'JetBrains Mono', monospace";
+    ctx.fillText(tokTxt, 8, y + cellH * 0.68);
+
+    for (let d = 0; d < PE_D; d++) {
+      const v = vec[d]; // [-1, 1]
+      const x = padL + d * cellW;
+      ctx.fillStyle = v >= 0
+        ? `rgba(79, 70, 229, ${0.12 + v * 0.85})`
+        : `rgba(225, 29, 72, ${0.12 + (-v) * 0.85})`;
+      ctx.fillRect(x + 0.8, y + 0.8, cellW - 1.6, cellH - 1.6);
+    }
+
+    if (pos === p1 || pos === p2) {
+      ctx.strokeStyle = pos === p1 ? "#4f46e5" : "#0d9488";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(padL, y, W - padL - padR, cellH);
+    }
+  }
+  canvas._meta = { padL, padT, cellW, cellH, numPos };
+}
+
+function drawPEWaves(numPos, p1, p2) {
+  const canvas = $("pe-waves-canvas");
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width || 520, H = 145;
+  canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.height = H + "px";
+  ctx.scale(dpr, dpr);
+
+  ctx.fillStyle = cssVar("--canvas-bg");
+  ctx.fillRect(0, 0, W, H);
+
+  const padX = 20, padY = 18;
+  const midY = H / 2;
+  const amp = (H - padY * 2) / 2.2;
+
+  ctx.strokeStyle = cssVar("--canvas-grid");
+  ctx.beginPath(); ctx.moveTo(padX, midY); ctx.lineTo(W - padX, midY); ctx.stroke();
+
+  const dims = [
+    { d: 0, color: "#4f46e5" },
+    { d: 2, color: "#0d9488" },
+    { d: 4, color: "#d97706" },
+    { d: 8, color: "#e11d48" }
+  ];
+
+  dims.forEach(item => {
+    ctx.strokeStyle = item.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let px = 0; px <= 120; px++) {
+      const pos = (px / 120) * (numPos - 1);
+      const val = Math.sin(pos / Math.pow(10000, item.d / PE_D));
+      const x = padX + (px / 120) * (W - padX * 2);
+      const y = midY - val * amp;
+      if (px === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  });
+
+  // Vertical position markers
+  [[p1, "#4f46e5", "P1"], [p2, "#0d9488", "P2"]].forEach(([p, col, lbl]) => {
+    const x = padX + (p / Math.max(1, numPos - 1)) * (W - padX * 2);
+    ctx.save();
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(x, 8); ctx.lineTo(x, H - 8); ctx.stroke();
+    ctx.restore();
+    ctx.font = "700 10.5px 'JetBrains Mono', monospace";
+    ctx.fillStyle = col;
+    ctx.fillText(lbl, x + 3, 14);
+  });
+}
+
+// ============================================================================
+// STAGE 5: SELF-ATTENTION (Q·K·V, MULTI-HEAD, CAUSAL MASKING & ARC FLOW)
+// ============================================================================
+let attnState = {
+  sentence: "The animal didn't cross the street because it was too tired",
+  tokens: [],
+  head: "semantic",
+  causal: true,
+  selectedQuery: 7, // "it" in the default sentence
+  weights: [],
+  rawScores: []
+};
+
+function computeAttentionMatrix() {
+  const words = splitIntoWords(attnState.sentence).filter(w => !/^[.,!?;:]$/.test(w)).slice(0, 14);
+  attnState.tokens = words;
+  const L = words.length;
+  if (attnState.selectedQuery >= L) attnState.selectedQuery = L - 1;
+
+  const embs = words.map(w => getWordEmbedding(w, words));
+  const rawScores = Array.from({ length: L }, () => new Array(L).fill(0));
+  const weights = Array.from({ length: L }, () => new Array(L).fill(0));
+  const sqrtDk = Math.sqrt(8);
+
+  for (let i = 0; i < L; i++) {
+    const wi = words[i];
+    for (let j = 0; j < L; j++) {
+      const wj = words[j];
+      if (attnState.causal && j > i) {
+        rawScores[i][j] = -Infinity;
+        continue;
+      }
+
+      const sim = cosineSim(embs[i], embs[j]);
+      const dist = Math.abs(i - j);
+      let score = 0;
+
+      if (attnState.head === "semantic") {
+        // Semantic similarity + pedagogical coreference/polysemy boosts
+        score = (sim * 3.8) / sqrtDk + (i === j ? 0.55 : 0);
+        if ((wi === "it" || wi === "he" || wi === "she") && /^(animal|cat|dog|street|bank|python)$/.test(wj)) {
+          score += (wj === "animal" || wj === "cat" || wj === "dog") ? 2.8 : 1.2;
+        }
+        if (wi === "tired" && /^(animal|it|cat|dog)$/.test(wj)) score += 2.1;
+        if (wi === "flooded" && /^(bank|river)$/.test(wj)) score += 2.3;
+        if (wi === "river" && wj === "bank") score += 2.4;
+        if (wi === "bank" && wj === "river") score += 2.4;
+        if (wi === "sat" && /^(cat|dog|mat|rug)$/.test(wj)) score += 1.7;
+        if (wi === "mat" && /^(cat|sat)$/.test(wj)) score += 1.6;
+      } else if (attnState.head === "syntax") {
+        // Strong local positional / adjacent window focus
+        score = 2.6 * Math.exp(-dist * 0.72) + (j === i - 1 ? 1.15 : 0);
+      } else {
+        // Broad topic / content-word aggregation
+        const isContent = !STOPWORDS.has(wj);
+        score = (isContent ? 1.65 : 0.2) + sim * 1.1 - dist * 0.04;
+      }
+      rawScores[i][j] = score;
+    }
+
+    // Softmax over row i
+    const row = rawScores[i];
+    const maxS = Math.max(...row.filter(v => Number.isFinite(v)));
+    let sumExp = 0;
+    const exps = row.map(v => {
+      if (!Number.isFinite(v)) return 0;
+      const e = Math.exp(v - maxS);
+      sumExp += e;
+      return e;
+    });
+    for (let j = 0; j < L; j++) weights[i][j] = sumExp > 0 ? exps[j] / sumExp : 0;
+  }
+
+  attnState.rawScores = rawScores;
+  attnState.weights = weights;
+  renderAttentionUI();
+}
+
+function drawAttentionArcs() {
+  const canvas = $("attn-arc-canvas");
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width || 1000, H = 210;
+  canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.height = H + "px";
+  ctx.scale(dpr, dpr);
+
+  ctx.fillStyle = cssVar("--canvas-bg");
+  ctx.fillRect(0, 0, W, H);
+
+  const toks = attnState.tokens;
+  const L = toks.length;
+  if (!L) return;
+
+  const padX = 48;
+  const baseY = H - 46;
+  const stepX = L > 1 ? (W - padX * 2) / (L - 1) : 0;
+  const qIdx = attnState.selectedQuery;
+  const qx = padX + qIdx * stepX;
+
+  // Draw arcs from selected Query to every Key
+  for (let j = 0; j < L; j++) {
+    const w = attnState.weights[qIdx][j];
+    if (w < 0.015) continue;
+    const kx = padX + j * stepX;
+    const span = Math.abs(qx - kx);
+    const arcH = j === qIdx ? 42 : Math.min(baseY - 46, 36 + span * 0.28);
+
+    ctx.strokeStyle = j === qIdx
+      ? `rgba(13, 148, 136, ${Math.min(0.95, w * 1.4 + 0.15)})`
+      : `rgba(79, 70, 229, ${Math.min(0.95, w * 1.4 + 0.12)})`;
+    ctx.lineWidth = Math.max(1.2, w * 10);
+    ctx.beginPath();
+    if (j === qIdx) {
+      ctx.arc(qx, baseY - 18, 16, Math.PI * 0.15, Math.PI * 0.85, true);
+    } else {
+      ctx.moveTo(qx, baseY - 14);
+      ctx.quadraticCurveTo((qx + kx) / 2, baseY - 14 - arcH * 1.35, kx, baseY - 14);
+    }
+    ctx.stroke();
+
+    if (w >= 0.12 && j !== qIdx) {
+      ctx.font = "700 10.5px 'JetBrains Mono', monospace";
+      ctx.fillStyle = cssVar("--accent");
+      ctx.textAlign = "center";
+      ctx.fillText(`${(w * 100).toFixed(0)}%`, (qx + kx) / 2, baseY - 16 - arcH * 0.72);
+    }
+  }
+
+  // Draw token pills along bottom
+  attnState._hitBoxes = [];
+  for (let i = 0; i < L; i++) {
+    const x = padX + i * stepX;
+    const isQ = i === qIdx;
+    const isMasked = attnState.causal && i > qIdx;
+    const w = attnState.weights[qIdx][i];
+    const label = toks[i];
+    ctx.font = `${isQ ? "700" : "600"} 12.5px 'JetBrains Mono', monospace`;
+    const tw = Math.max(38, ctx.measureText(label).width + 16);
+    const bx = x - tw / 2, by = baseY - 10, bh = 28;
+
+    ctx.fillStyle = isQ ? "#4f46e5" : (isMasked ? cssVar("--bg-subtle") : `rgba(79, 70, 229, ${w * 0.45 + 0.06})`);
+    ctx.strokeStyle = isQ ? "#4f46e5" : cssVar("--border-strong");
+    ctx.lineWidth = isQ ? 2 : 1;
+    ctx.beginPath();
+    ctx.roundRect(bx, by, tw, bh, 7);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = isQ ? "#ffffff" : (isMasked ? cssVar("--text-soft") : cssVar("--canvas-text"));
+    ctx.textAlign = "center";
+    ctx.fillText(label, x, by + 18);
+
+    ctx.font = "500 10px 'JetBrains Mono', monospace";
+    ctx.fillStyle = isMasked ? cssVar("--rose") : cssVar("--text-soft");
+    ctx.fillText(isMasked ? "masked" : `${(w * 100).toFixed(0)}%`, x, by + bh + 13);
+
+    attnState._hitBoxes.push({ i, bx, by, bw: tw, bh });
+  }
+  ctx.textAlign = "left";
+}
+
+function renderAttentionUI() {
+  const toks = attnState.tokens;
+  const qIdx = attnState.selectedQuery;
+  $("attn-selected-hud").innerHTML = `Query Token: <strong style="color:var(--accent);">"${escapeHtml(toks[qIdx])}" (pos ${qIdx})</strong> · Click any token pill to switch Query`;
+
+  drawAttentionArcs();
+
+  // Render full heatmap table
+  let html = `<table class="attn-table"><thead><tr><th>Q \\ K</th>${toks.map((t, j) => `<th>${escapeHtml(t)}</th>`).join("")}</tr></thead><tbody>`;
+  for (let i = 0; i < toks.length; i++) {
+    html += `<tr class="${i === qIdx ? "active-row" : ""}"><th class="row-tok" data-qrow="${i}">${escapeHtml(toks[i])}</th>`;
+    for (let j = 0; j < toks.length; j++) {
+      const masked = attnState.causal && j > i;
+      const w = attnState.weights[i][j];
+      if (masked) {
+        html += `<td style="background:var(--bg-subtle);color:var(--text-soft);">−∞</td>`;
+      } else {
+        const bg = `rgba(79, 70, 229, ${Math.min(0.92, w * 1.15 + 0.03)})`;
+        const fg = w > 0.42 ? "#ffffff" : "var(--text)";
+        html += `<td style="background:${bg};color:${fg};cursor:pointer;" data-qrow="${i}" title="Q:'${toks[i]}' → K:'${toks[j]}' | raw=${attnState.rawScores[i][j].toFixed(2)}, α=${(w * 100).toFixed(1)}%">${w.toFixed(2)}</td>`;
+      }
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody></table>`;
+  $("attn-matrix-wrap").innerHTML = html;
+
+  $("attn-matrix-wrap").querySelectorAll("[data-qrow]").forEach(el => {
+    el.addEventListener("click", () => {
+      attnState.selectedQuery = Number(el.dataset.qrow);
+      renderAttentionUI();
+    });
+  });
+
+  // Render sorted breakdown for selected query
+  const items = toks.map((t, j) => ({
+    tok: t, pos: j, w: attnState.weights[qIdx][j], raw: attnState.rawScores[qIdx][j], masked: attnState.causal && j > qIdx
+  })).sort((a, b) => b.w - a.w);
+
+  $("attn-breakdown").innerHTML = `
+    <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 10px;">
+      How <strong>"${escapeHtml(toks[qIdx])}"</strong> blends Value vectors (<code>∑ αᵢⱼ · Vⱼ</code>):
+    </p>
+    ${items.slice(0, 6).map(it => `
+      <div style="display:grid;grid-template-columns:80px 1fr 50px;gap:8px;align-items:center;margin-bottom:6px;opacity:${it.masked ? 0.35 : 1};">
+        <span class="mono" style="font-size:12px;font-weight:600;">${escapeHtml(it.tok)} <span style="color:var(--text-soft);">[${it.pos}]</span></span>
+        <div class="prob-bar-track" style="height:14px;">
+          <div class="prob-bar-fill" style="width:${(it.w * 100).toFixed(1)}%;background:${it.pos === qIdx ? 'var(--teal)' : 'var(--accent)'};"></div>
+        </div>
+        <span class="mono" style="font-size:11.5px;text-align:right;font-weight:700;">${it.masked ? "−∞" : (it.w * 100).toFixed(1) + "%"}</span>
+      </div>
+    `).join("")}
+  `;
+}
+
+// ============================================================================
+// STAGE 6: TRANSFORMER BLOCK INSPECTOR & SYSTEMS CALCULATOR
+// ============================================================================
+const ARCH_DETAILS = {
+  input: {
+    title: "Residual Stream Input x ∈ ℝ^(L × d)",
+    formula: "x = E[token_ids] + PE(positions)",
+    text: "Think of the residual stream as a shared communication bus. Every attention head and FFN reads from this stream and writes incremental updates back onto it without erasing earlier representations.",
+    sampleVec: [1.42, -0.85, 2.15, 0.34, -1.92, 0.78]
+  },
+  ln1: {
+    title: "Pre-LayerNorm / RMSNorm",
+    formula: "LN(x) = γ · (x − μ) / √(σ² + ε) + β",
+    text: "Normalizes each token's d-dimensional vector to mean 0 and variance 1 (RMSNorm drops mean subtraction for ~15% speedup, used in Llama/Gemma). Prevents activation explosion across 80+ deep layers.",
+    sampleVec: [0.81, -0.92, 1.37, 0.01, -1.73, 0.34]
+  },
+  mha: {
+    title: "Masked Multi-Head Self-Attention",
+    formula: "MHA(X) = Concat(head₁, ..., head_H) · W_O",
+    text: "Runs H parallel attention heads in lower-dimensional subspaces (d_k = d / H), letting different heads simultaneously track syntax, coreference, induction patterns, and long-range semantics.",
+    sampleVec: [0.35, 0.48, -0.22, 0.61, 0.19, -0.40]
+  },
+  res1: {
+    title: "Residual Connection (Skip Add)",
+    formula: "h = x + MHA(LN(x))",
+    text: "Directly adds the original input x to the attention delta. During backpropagation, ∂h/∂x = I + ∂F/∂x creates an unimpeded gradient highway directly to early layers.",
+    sampleVec: [1.77, -0.37, 1.93, 0.95, -1.73, 0.38]
+  },
+  ffn: {
+    title: "Position-Wise Feed-Forward Network (MLP / SwiGLU)",
+    formula: "FFN(h) = W_down · GELU(W_up · h + b₁) + b₂   [d → 4d → d]",
+    text: "Operates independently on each token position. Expands dimensionality 4× (e.g. 4096 → 16384), applies a smooth non-linearity (GELU or SwiGLU), and projects back. Holds ~2/3 of all model parameters and acts as distributed factual key-value memory.",
+    sampleVec: [0.12, -0.64, 0.88, -0.15, 0.52, 0.71]
+  },
+  out: {
+    title: "Block Output → Next Transformer Layer",
+    formula: "y = h + FFN(LN(h))   (repeated N = 12 to 128 times)",
+    text: "Early layers capture lexical/syntactic structure; middle layers perform multi-hop reasoning and entity tracking; final layers sharpen predictions toward the output vocabulary.",
+    sampleVec: [1.89, -1.01, 2.81, 0.80, -1.21, 1.09]
+  }
+};
+
+function renderArchDetail(key) {
+  const d = ARCH_DETAILS[key];
+  $("arch-detail-box").innerHTML = `
+    <div style="font-weight:700;font-size:14.5px;margin-bottom:6px;color:var(--accent);">${d.title}</div>
+    <div class="formula-box" style="margin-bottom:10px;font-size:12px;">${d.formula}</div>
+    <p style="font-size:13px;color:var(--text-muted);margin:0 0 10px;">${d.text}</p>
+    <div style="font-size:11.5px;color:var(--text-soft);margin-bottom:4px;">Live Activation Snapshot (first 6 dims of token vector):</div>
+    <div class="mono" style="font-size:12px;background:var(--bg-subtle);padding:7px 10px;border-radius:7px;">
+      [${d.sampleVec.map(v => `<span style="color:${v >= 0 ? 'var(--accent)' : 'var(--rose)'};font-weight:600;">${v >= 0 ? '+' : ''}${v.toFixed(2)}</span>`).join(", ")}]
+    </div>
+  `;
+}
+
+function updateScaleCalculator() {
+  const L = Number($("calc-L").value);
+  const d = Number($("calc-d").value);
+  const V = Number($("calc-V").value);
+  const S = Number($("calc-S").value);
+
+  $("calc-L-val").textContent = L;
+  $("calc-d-val").textContent = d.toLocaleString();
+  $("calc-V-val").textContent = V.toLocaleString();
+  $("calc-S-val").textContent = S.toLocaleString() + " tokens";
+
+  const embedParams = V * d;
+  const attnPerLayer = 4 * d * d;
+  const ffnPerLayer = 8 * d * d; // standard 4d MLP
+  const totalParams = embedParams + L * (attnPerLayer + ffnPerLayer) + embedParams; // untied lm_head
+  const ffnShare = ((L * ffnPerLayer) / totalParams) * 100;
+  const vramGB = (totalParams * 2) / 1e9; // BF16 = 2 bytes/param
+  const kvGB = (2 * L * S * d * 2) / 1e9; // 2 (K & V) * layers * seq * d * 2 bytes
+
+  const fmtParams = totalParams >= 1e9 ? (totalParams / 1e9).toFixed(2) + "B" : (totalParams / 1e6).toFixed(0) + "M";
+  $("calc-params").textContent = fmtParams;
+  $("calc-vram").textContent = vramGB.toFixed(1) + " GB";
+  $("calc-kv").textContent = kvGB >= 1 ? kvGB.toFixed(2) + " GB" : (kvGB * 1024).toFixed(0) + " MB";
+  $("calc-ffn-pct").textContent = ffnShare.toFixed(0) + "%";
+}
+
+// ============================================================================
+// STAGE 7: LOGITS, SOFTMAX, TEMPERATURE, TOP-K, TOP-P & SAMPLING
+// ============================================================================
+const SAMPLING_SCENARIOS = {
+  cat: {
+    prefix: "The cat sat on the",
+    candidates: [
+      { tok: "mat", logit: 6.4 },
+      { tok: "rug", logit: 5.7 },
+      { tok: "sofa", logit: 5.1 },
+      { tok: "bed", logit: 4.7 },
+      { tok: "floor", logit: 4.1 },
+      { tok: "keyboard", logit: 3.4 },
+      { tok: "roof", logit: 2.6 },
+      { tok: "moon", logit: 1.5 }
+    ],
+    continuations: [
+      "and quietly fell asleep.",
+      "while watching birds outside.",
+      "purring in the warm sun.",
+      "waiting for dinner."
+    ]
+  },
+  python: {
+    prefix: "In Python, a hash map is called a",
+    candidates: [
+      { tok: "dict", logit: 6.8 },
+      { tok: "dictionary", logit: 6.5 },
+      { tok: "mapping", logit: 4.2 },
+      { tok: "table", logit: 3.1 },
+      { tok: "set", logit: 2.8 },
+      { tok: "list", logit: 2.1 },
+      { tok: "tuple", logit: 1.4 },
+      { tok: "snake", logit: 0.6 }
+    ],
+    continuations: [
+      "with O(1) average lookup time.",
+      "mapping unique keys to values.",
+      "implemented via open addressing."
+    ]
+  },
+  stock: {
+    prefix: "After the earnings report, stock prices",
+    candidates: [
+      { tok: "surged", logit: 5.9 },
+      { tok: "fell", logit: 5.7 },
+      { tok: "dropped", logit: 5.3 },
+      { tok: "jumped", logit: 4.9 },
+      { tok: "stabilized", logit: 4.1 },
+      { tok: "crashed", logit: 3.8 },
+      { tok: "doubled", logit: 2.9 },
+      { tok: "danced", logit: 1.1 }
+    ],
+    continuations: [
+      "by 8% in after-hours trading.",
+      "as investors digested the guidance.",
+      "across the entire tech sector."
+    ]
+  },
+  space: {
+    prefix: "The telescope captured a distant",
+    candidates: [
+      { tok: "galaxy", logit: 6.3 },
+      { tok: "nebula", logit: 5.8 },
+      { tok: "star", logit: 5.2 },
+      { tok: "exoplanet", logit: 4.9 },
+      { tok: "quasar", logit: 4.2 },
+      { tok: "comet", logit: 3.5 },
+      { tok: "asteroid", logit: 2.8 },
+      { tok: "toaster", logit: 0.7 }
+    ],
+    continuations: [
+      "billions of light-years away.",
+      "glowing in infrared light.",
+      "orbiting a red dwarf."
+    ]
+  }
+};
+
+let lastSampledIdx = -1;
+let generatedTokens = [];
+
+function computeSamplingDistribution() {
+  const key = $("samp-context-select").value;
+  const sc = SAMPLING_SCENARIOS[key];
+  const T = Number($("samp-temp").value);
+  const topK = Number($("samp-topk").value);
+  const topP = Number($("samp-topp").value);
+
+  $("samp-temp-val").textContent = T.toFixed(2);
+  $("samp-topk-val").textContent = topK;
+  $("samp-topp-val").textContent = topP.toFixed(2);
+
+  // Step 1: Temperature-scaled Softmax
+  const scaled = sc.candidates.map(c => c.logit / T);
+  const maxL = Math.max(...scaled);
+  const exps = scaled.map(v => Math.exp(v - maxL));
+  const sumE = exps.reduce((a, b) => a + b, 0);
+  const rawProbs = exps.map(e => e / sumE);
+
+  // Step 2: Apply Top-K and Top-P (candidates are pre-sorted descending by logit)
+  let cumP = 0;
+  const keptFlags = rawProbs.map((p, i) => {
+    if (i >= topK) return false;
+    const include = (i === 0) || (cumP < topP);
+    cumP += p;
+    return include;
+  });
+
+  // Step 3: Renormalize kept probabilities
+  const keptSum = rawProbs.reduce((acc, p, i) => acc + (keptFlags[i] ? p : 0), 0) || 1;
+  const finalProbs = rawProbs.map((p, i) => keptFlags[i] ? p / keptSum : 0);
+
+  // Shannon Entropy (bits)
+  let entropy = 0;
+  finalProbs.forEach(p => { if (p > 1e-9) entropy -= p * Math.log2(p); });
+
+  $("samp-entropy-pill").textContent = `Entropy: ${entropy.toFixed(2)} bits`;
+  $("samp-active-cnt").textContent = `${keptFlags.filter(Boolean).length} / ${sc.candidates.length}`;
+  $("samp-top1-prob").textContent = `${(finalProbs[0] * 100).toFixed(1)}%`;
+
+  $("samp-bars-container").innerHTML = sc.candidates.map((c, i) => {
+    const p = finalProbs[i];
+    const pct = (p * 100).toFixed(1);
+    const excluded = !keptFlags[i];
+    const winner = i === lastSampledIdx;
+    return `
+      <div class="prob-row ${excluded ? "excluded" : ""} ${winner ? "winner" : ""}">
+        <span class="mono" style="font-weight:700;font-size:13px;">${escapeHtml(c.tok)}</span>
+        <span class="mono" style="font-size:11.5px;color:var(--text-soft);">z=${c.logit.toFixed(1)}</span>
+        <div class="prob-bar-track">
+          <div class="prob-bar-fill" style="width:${pct}%;background:${winner ? 'var(--emerald)' : (i === 0 ? 'var(--accent)' : 'var(--teal)')};"></div>
+        </div>
+        <span class="mono" style="font-size:12.5px;font-weight:700;text-align:right;">${excluded ? "0.0%" : pct + "%"}</span>
+      </div>
+    `;
+  }).join("");
+
+  renderSampledStream();
+  return { candidates: sc.candidates, finalProbs };
+}
+
+function renderSampledStream() {
+  const sc = SAMPLING_SCENARIOS[$("samp-context-select").value];
+  const genHtml = generatedTokens.map((t, i) =>
+    `<span style="background:${i === 0 ? 'var(--emerald-soft)' : 'var(--accent-soft)'};color:${i === 0 ? 'var(--emerald)' : 'var(--accent)'};padding:2px 6px;border-radius:5px;margin-left:4px;font-weight:700;">${escapeHtml(t)}</span>`
+  ).join("");
+  $("samp-stream").innerHTML = `${escapeHtml(sc.prefix)}${genHtml || ' <span style="color:var(--text-soft);">[click Sample Next Token]</span>'}`;
+}
+
+function sampleNextToken() {
+  const { candidates, finalProbs } = computeSamplingDistribution();
+  const r = Math.random();
+  let acc = 0, pick = 0;
+  for (let i = 0; i < finalProbs.length; i++) {
+    acc += finalProbs[i];
+    if (r <= acc) { pick = i; break; }
+  }
+  lastSampledIdx = pick;
+  const sc = SAMPLING_SCENARIOS[$("samp-context-select").value];
+  const cont = sc.continuations[Math.floor(Math.random() * sc.continuations.length)];
+  generatedTokens = [candidates[pick].tok, cont];
+  computeSamplingDistribution();
+}
+
+// ============================================================================
+// GLOBAL SYNC & EVENT WIRING
+// ============================================================================
+function syncGlobalPrompt(text) {
+  $("global-prompt").value = text;
+  $("encode-input").value = text;
+  attnState.sentence = text;
+  attnState.selectedQuery = Math.max(0, splitIntoWords(text).filter(w => !/^[.,!?;:]$/.test(w)).length - 1);
+  runTokenization();
+  computeAttentionMatrix();
+}
+
+function redrawAllCanvases() {
+  drawCosine2D();
+  drawPCA3D();
+  updateStage4Positional();
+  drawAttentionArcs();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Global prompt bar
+  $("sync-pipeline-btn").addEventListener("click", () => syncGlobalPrompt($("global-prompt").value));
+  $("global-prompt").addEventListener("keydown", e => { if (e.key === "Enter") syncGlobalPrompt($("global-prompt").value); });
+  document.querySelectorAll("[data-preset]").forEach(btn => {
+    btn.addEventListener("click", () => syncGlobalPrompt(btn.dataset.preset));
+  });
+
+  // Stage 1 wiring
+  $("tok-algo-group").querySelectorAll(".seg-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $("tok-algo-group").querySelectorAll(".seg-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      tokAlgo = btn.dataset.algo;
+      rebuildTokenizer(true);
+    });
+  });
+  $("build-vocab-btn").addEventListener("click", () => rebuildTokenizer(true));
+  document.querySelectorAll("[data-corpus]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $("corpus-input").value = CORPUS_PRESETS[btn.dataset.corpus];
+      rebuildTokenizer(true);
+    });
+  });
+  $("vocab-slider").addEventListener("input", updateVocabAndTokenize);
+  $("vocab-search").addEventListener("input", renderVocabTable);
+  $("encode-input").addEventListener("input", () => {
+    $("global-prompt").value = $("encode-input").value;
+    runTokenization();
+  });
+  $("tokenize-btn").addEventListener("click", () => {
+    syncGlobalPrompt($("encode-input").value);
+  });
+
+  // Stage 2 wiring
+  initVectorArithmetic();
+
+  // Stage 3A & 3B wiring
+  initCosine2D();
+  initPCA3DInteractions();
+  $("embed-mode-group").querySelectorAll(".seg-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $("embed-mode-group").querySelectorAll(".seg-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      embedMode = btn.dataset.emode;
+      $("embed-mode-note").innerHTML = embedMode === "semantic"
+        ? `<strong>Semantic Mode (20D):</strong> Sentences cluster by <em>meaning</em> — notice <em>"The cat sat on the mat."</em> clusters near <em>"A kitten rested on the rug."</em>, while <em>"Pythons are large snakes."</em> separates from <em>"Coding in Python is my passion."</em>`
+        : `<strong>Spelling Trigrams Mode (64D — Reference Baseline):</strong> Counts 3-character chunks! Notice how <em>"The bat sat on the mat."</em> falsely scores highest with <em>"The cat sat on the mat."</em> while synonyms like <em>"kitten/rug"</em> drift far apart!`;
+      runEmbedAndPlot3D();
+    });
+  });
+  $("embed-plot-btn").addEventListener("click", runEmbedAndPlot3D);
+  const addCustomWord = () => {
+    const t = $("custom-word-input").value.trim();
+    if (!t) return;
+    const box = $("sentences-input");
+    const lines = box.value.split("\n").map(s => s.trim()).filter(Boolean);
+    if (!lines.includes(t)) box.value = box.value.trimEnd() + "\n" + t;
+    customUserSentence = t;
+    runEmbedAndPlot3D();
+  };
+  $("add-custom-word-btn").addEventListener("click", addCustomWord);
+  $("custom-word-input").addEventListener("keydown", e => { if (e.key === "Enter") addCustomWord(); });
+
+  // Stage 4 wiring
+  $("pe-p1").addEventListener("input", updateStage4Positional);
+  $("pe-p2").addEventListener("input", updateStage4Positional);
+  $("pe-heatmap-canvas").addEventListener("mousemove", e => {
+    const canvas = $("pe-heatmap-canvas");
+    const m = canvas._meta;
+    const tip = $("pe-tooltip");
+    if (!m) return;
+    const r = canvas.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    const d = Math.floor((mx - m.padL) / m.cellW);
+    const pos = Math.floor((my - m.padT) / m.cellH);
+    if (d >= 0 && d < PE_D && pos >= 0 && pos < m.numPos) {
+      const val = computePE(pos)[d];
+      const fn = d % 2 === 0 ? "sin" : "cos";
+      tip.style.display = "block";
+      tip.style.left = Math.min(r.width - 190, mx + 12) + "px";
+      tip.style.top = Math.max(6, my - 34) + "px";
+      tip.innerHTML = `<strong>PE(pos=${pos}, d=${d})</strong><br>${fn} = <span style="color:#818cf8;font-family:monospace;">${val.toFixed(4)}</span>`;
+    } else {
+      tip.style.display = "none";
+    }
+  });
+  $("pe-heatmap-canvas").addEventListener("mouseleave", () => { $("pe-tooltip").style.display = "none"; });
+
+  // Stage 5 wiring
+  $("attn-head-group").querySelectorAll(".seg-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $("attn-head-group").querySelectorAll(".seg-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      attnState.head = btn.dataset.head;
+      computeAttentionMatrix();
+    });
+  });
+  $("attn-causal-toggle").addEventListener("change", e => {
+    attnState.causal = e.target.checked;
+    computeAttentionMatrix();
+  });
+  document.querySelectorAll("[data-attn-sent]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      attnState.sentence = btn.dataset.attnSent;
+      const words = splitIntoWords(attnState.sentence).filter(w => !/^[.,!?;:]$/.test(w));
+      const itIdx = words.indexOf("it");
+      const floodIdx = words.indexOf("flooded");
+      attnState.selectedQuery = itIdx >= 0 ? itIdx : (floodIdx >= 0 ? floodIdx : words.length - 1);
+      computeAttentionMatrix();
+    });
+  });
+  $("attn-use-global").addEventListener("click", () => {
+    attnState.sentence = $("global-prompt").value;
+    attnState.selectedQuery = Math.max(0, splitIntoWords(attnState.sentence).filter(w => !/^[.,!?;:]$/.test(w)).length - 1);
+    computeAttentionMatrix();
+  });
+  $("attn-arc-canvas").addEventListener("click", e => {
+    const r = $("attn-arc-canvas").getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    for (const box of (attnState._hitBoxes || [])) {
+      if (mx >= box.bx && mx <= box.bx + box.bw && my >= box.by && my <= box.by + box.bh) {
+        attnState.selectedQuery = box.i;
+        renderAttentionUI();
+        break;
+      }
+    }
+  });
+
+  // Stage 6 wiring
+  $("arch-flow").querySelectorAll(".arch-node").forEach(node => {
+    node.addEventListener("click", () => {
+      $("arch-flow").querySelectorAll(".arch-node").forEach(n => n.classList.remove("active"));
+      node.classList.add("active");
+      renderArchDetail(node.dataset.block);
+    });
+  });
+  ["calc-L", "calc-d", "calc-V", "calc-S"].forEach(id => $(id).addEventListener("input", updateScaleCalculator));
+  const MODEL_PRESETS = {
+    gpt2:     { L: 12, d: 768,  V: 50000,  S: 1024 },
+    llama8b:  { L: 32, d: 4096, V: 128000, S: 8192 },
+    llama70b: { L: 80, d: 8192, V: 128000, S: 8192 }
+  };
+  document.querySelectorAll("[data-model]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const m = MODEL_PRESETS[btn.dataset.model];
+      $("calc-L").value = m.L; $("calc-d").value = m.d; $("calc-V").value = m.V; $("calc-S").value = m.S;
+      updateScaleCalculator();
+    });
+  });
+
+  // Stage 7 wiring
+  ["samp-temp", "samp-topk", "samp-topp"].forEach(id => $(id).addEventListener("input", () => { lastSampledIdx = -1; computeSamplingDistribution(); }));
+  $("samp-context-select").addEventListener("change", () => { lastSampledIdx = -1; generatedTokens = []; computeSamplingDistribution(); });
+  $("sample-once-btn").addEventListener("click", sampleNextToken);
+  $("sample-reset-btn").addEventListener("click", () => { lastSampledIdx = -1; generatedTokens = []; computeSamplingDistribution(); });
+  document.querySelectorAll("[data-decode]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const m = btn.dataset.decode;
+      if (m === "greedy")   { $("samp-temp").value = 0.10; $("samp-topk").value = 1; $("samp-topp").value = 1.00; }
+      if (m === "balanced") { $("samp-temp").value = 0.80; $("samp-topk").value = 8; $("samp-topp").value = 0.90; }
+      if (m === "creative") { $("samp-temp").value = 1.50; $("samp-topk").value = 8; $("samp-topp").value = 0.95; }
+      lastSampledIdx = -1;
+      computeSamplingDistribution();
+    });
+  });
+
+  // Initial Boot — every stage renders immediately
+  rebuildTokenizer(true);
+  drawCosine2D();
+  runEmbedAndPlot3D();
+  computeAttentionMatrix();
+  renderArchDetail("input");
+  updateScaleCalculator();
+  computeSamplingDistribution();
+
+  window.addEventListener("resize", () => redrawAllCanvases());
+});
+</script>
+</body>
+</html>
